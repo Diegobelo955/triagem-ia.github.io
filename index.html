@@ -452,7 +452,7 @@
   <div id="draftBanner" class="draft-banner container"></div>
   <div class="print-header">
     <strong>JBRJ — GT-IA — Triagem de Iniciativa de IA</strong><br>
-    Versão do framework: MVP v5 | Data de impressão: <span id="printDate"></span>
+    Versão do framework: MVP v5.1 | Data de impressão: <span id="printDate"></span>
   </div>
   <button type="button" class="floating-result" onclick="document.getElementById('painelResultado').scrollIntoView({behavior:'smooth'})">Ver resultado ↑</button>
 
@@ -988,26 +988,34 @@
     const tipoSolucao = getVal("tipoSolucao");
     const exemplo = getVal("exemploOrientador");
     const textoDados = textoDadosConcatenado();
+    const alertasTexto = [];
 
     // Alertas por texto digitado: ajudam a não deixar passar risco quando o usuário descreve,
     // mas esquece de marcar a classificação correspondente.
+    // Na v5.1, esses alertas NÃO elevam sozinhos a iniciativa para alto risco.
+    // Eles aparecem como alertas de confirmação. O nível de risco sobe por marcações explícitas
+    // ou por fatores objetivos: dado pessoal marcado, coordenada protegida marcada, provedor externo
+    // com dado não público, decisão automatizada, institucionalização etc.
     if (menciona(textoDados, /coordenad|localidade precisa|ponto de ocorrência|georrefer/i) && !checked("dCoordenada")) {
-      high.push("descrição menciona coordenadas/localidade precisa/georreferenciamento; confirmar se há coordenadas protegidas");
+      alertasTexto.push("A descrição menciona coordenadas/localidade/georreferenciamento. Confirmar se há coordenadas protegidas ou apenas distribuição geral não sensível.");
     }
     if (menciona(textoDados, /espécie ameaçada|ameacada|ameaçada|risco de coleta|dado sensível da biodiversidade|conhecimento tradicional/i) && !checked("dBiodiv")) {
-      high.push("descrição menciona possível dado sensível da biodiversidade; confirmar tratamento e mascaramento");
+      alertasTexto.push("A descrição menciona possível biodiversidade sensível. Confirmar se há dado sensível da biodiversidade ou apenas informação pública não sensível.");
     }
-    if (menciona(textoDados, /cpf|rg|matrícula|matricula|servidor|estudante|visitante|colaborador|dado pessoal|nome completo/i) && !checked("dPessoal")) {
-      high.push("descrição menciona possível dado pessoal; confirmar classificação LGPD");
+    if (menciona(textoDados, /\bcpf\b|\brg\b|matrícula|matricula|dado pessoal|dados pessoais|nome completo/i) && !checked("dPessoal")) {
+      alertasTexto.push("A descrição menciona possível dado pessoal. Confirmar classificação LGPD. Observação: RG/CPF só contam quando aparecem como palavra isolada.");
+    }
+    if (menciona(textoDados, /\bservidor\b|\bestudante\b|\bvisitante\b|\bcolaborador\b/i) && !checked("dPessoal")) {
+      alertasTexto.push("A descrição menciona pessoas ou papéis institucionais. Confirmar se há identificação de pessoa natural ou apenas função genérica.");
     }
     if (menciona(textoDados, /sigil|confidencial|restrito|interno|não publicado|nao publicado|carência|carencia/i) && !checked("dRestrito") && !checked("dConfidencial") && !checked("dCarencia")) {
-      medium.push("descrição menciona possível dado restrito, confidencial ou não publicado; confirmar classificação");
+      alertasTexto.push("A descrição menciona possível dado restrito, confidencial ou não publicado. Confirmar se esses dados estão fora do escopo ou se precisam ser classificados.");
     }
     if (menciona(textoDados, /parceir|cooperação|cooperacao|acordo|convênio|convenio/i) && !checked("dParceiro")) {
-      medium.push("descrição menciona dados de parceiro ou acordo; verificar finalidade e autorização de uso");
+      alertasTexto.push("A descrição menciona dados de parceiro ou acordo. Verificar finalidade e autorização de uso, se aplicável.");
     }
     if (menciona(textoDados, /artigo|pdf|imagem|base protegida|direito autoral|copyright|licença|licenca/i) && !checked("dAutor")) {
-      medium.push("descrição menciona possível conteúdo protegido por direito autoral; verificar licença e uso autorizado");
+      alertasTexto.push("A descrição menciona possível conteúdo protegido por direito autoral. Confirmar licença, acesso autorizado e limites de uso.");
     }
 
     let baseline = "";
@@ -1071,7 +1079,7 @@
 
     const highUnique = Array.from(new Set(high));
     const mediumUnique = Array.from(new Set(medium)).filter(x => !highUnique.includes(x));
-    return { score, high: highUnique, medium: mediumUnique, nivel, encaminhamento, boxClass, aie, leituraPontuacao, baseline };
+    return { score, high: highUnique, medium: mediumUnique, alertasTexto: Array.from(new Set(alertasTexto)), nivel, encaminhamento, boxClass, aie, leituraPontuacao, baseline };
   }
 
   function controles() {
@@ -1103,8 +1111,9 @@
     if ($("tipoInferido")) $("tipoInferido").value = r.nivel;
     const highPills = r.high.map(x => `<span class="pill danger">${escapeHtml(x)}</span>`).join("");
     const medPills = r.medium.map(x => `<span class="pill medium">${escapeHtml(x)}</span>`).join("");
-    const flagHtml = (highPills || medPills)
-      ? `<div style="margin-top:8px">${highPills}${medPills}</div>`
+    const alertPills = (r.alertasTexto || []).map(x => `<span class="pill info">${escapeHtml(x)}</span>`).join("");
+    const flagHtml = (highPills || medPills || alertPills)
+      ? `<div style="margin-top:8px">${highPills}${medPills}${alertPills}</div>`
       : `<span class="pill ok">Nenhum fator de trava ou médio risco identificado</span>`;
 
     const divergence = (r.baseline && r.baseline !== r.nivel)
@@ -1259,6 +1268,7 @@
         fatores_de_trava_alto_risco: r.high,
         fatores_de_medio_risco: r.medium,
         uso_do_AIE: r.aie,
+        alertas_textuais_de_confirmacao: r.alertasTexto || [],
         controles_recomendados: controles()
       }
     };
@@ -1363,11 +1373,14 @@ ${d.resultado_automatico.fatores_de_trava_alto_risco.length ? "- " + d.resultado
 Fatores de médio risco:
 ${d.resultado_automatico.fatores_de_medio_risco.length ? "- " + d.resultado_automatico.fatores_de_medio_risco.join("\n- ") : "Não identificados"}
 
+Alertas textuais de confirmação:
+${d.resultado_automatico.alertas_textuais_de_confirmacao.length ? "- " + d.resultado_automatico.alertas_textuais_de_confirmacao.join("\n- ") : "Não identificados"}
+
 Controles recomendados:
 - ${d.resultado_automatico.controles_recomendados.join("\n- ")}
 
 Observação:
-Esta triagem é instrumento de apoio. A pontuação não autoriza automaticamente iniciativas com dados pessoais, dados pessoais sensíveis, dados institucionais confidenciais, dados sensíveis da biodiversidade, coordenadas protegidas, contratação relevante, integração crítica, decisão automatizada ou divulgação externa sensível. Nesses casos, deve prevalecer o fluxo de manifestação prévia definido na Política de IA do JBRJ.
+Esta triagem é instrumento de apoio. A pontuação não autoriza automaticamente iniciativas com dados pessoais, dados pessoais sensíveis, dados institucionais confidenciais, dados sensíveis da biodiversidade, coordenadas protegidas, contratação relevante, integração crítica, decisão automatizada ou divulgação externa sensível. Nesses casos, deve prevalecer o fluxo de manifestação prévia definido na Política de IA do JBRJ. Na versão v5.1, menções textuais a termos sensíveis geram alertas de confirmação, mas não elevam sozinhas o enquadramento para alto risco.
 `;
   }
 
@@ -1554,12 +1567,12 @@ Observação: resultado de apoio, sujeito à Política de IA do JBRJ e à manife
 
   function salvarRascunhoSessao() {
     if (location.hash.startsWith("#state=")) return;
-    sessionStorage.setItem("triagemIAJBRJ_draft_v5", JSON.stringify(serializeForm()));
+    sessionStorage.setItem("triagemIAJBRJ_draft_v5_1", JSON.stringify(serializeForm()));
   }
 
   function carregarRascunhoSessao() {
     if (location.hash.startsWith("#state=")) return false;
-    const raw = sessionStorage.getItem("triagemIAJBRJ_draft_v5");
+    const raw = sessionStorage.getItem("triagemIAJBRJ_draft_v5_1");
     if (!raw) return false;
     try {
       applyState(JSON.parse(raw));
@@ -1573,7 +1586,7 @@ Observação: resultado de apoio, sujeito à Política de IA do JBRJ e à manife
   }
 
   function descartarRascunho() {
-    sessionStorage.removeItem("triagemIAJBRJ_draft_v5");
+    sessionStorage.removeItem("triagemIAJBRJ_draft_v5_1");
     $("draftBanner").style.display = "none";
   }
 
@@ -1587,16 +1600,16 @@ Observação: resultado de apoio, sujeito à Política de IA do JBRJ e à manife
       data: new Date().toLocaleString("pt-BR")
     };
     let hist = [];
-    try { hist = JSON.parse(sessionStorage.getItem("triagemIAJBRJ_history_v5") || "[]"); } catch(e) {}
+    try { hist = JSON.parse(sessionStorage.getItem("triagemIAJBRJ_history_v5_1") || "[]"); } catch(e) {}
     hist.unshift(item);
     hist = hist.slice(0, 5);
-    sessionStorage.setItem("triagemIAJBRJ_history_v5", JSON.stringify(hist));
+    sessionStorage.setItem("triagemIAJBRJ_history_v5_1", JSON.stringify(hist));
     renderHistoricoSessao();
   }
 
   function renderHistoricoSessao() {
     let hist = [];
-    try { hist = JSON.parse(sessionStorage.getItem("triagemIAJBRJ_history_v5") || "[]"); } catch(e) {}
+    try { hist = JSON.parse(sessionStorage.getItem("triagemIAJBRJ_history_v5_1") || "[]"); } catch(e) {}
     const box = $("historicoProjetos");
     if (!box) return;
     if (!hist.length) {
@@ -1656,7 +1669,7 @@ Observação: resultado de apoio, sujeito à Política de IA do JBRJ e à manife
     $("frequencia").value = "pontual";
     $("relatorio").textContent = "Nenhum relatório gerado ainda.";
     $("resumoSEI").textContent = "Nenhum resumo gerado ainda.";
-    sessionStorage.removeItem("triagemIAJBRJ_draft_v5");
+    sessionStorage.removeItem("triagemIAJBRJ_draft_v5_1");
     renderResultado();
   }
 
@@ -1681,8 +1694,8 @@ Observação: resultado de apoio, sujeito à Política de IA do JBRJ e à manife
   function preencherExemploCNCFlora() {
     resetarCamposParaExemplo();
     $("nome").value = "Leitura assistida de literatura científica em lote";
-    $("area").value = "CNCFlora";
-    $("macroeixo").value = "Pesquisa";
+    $("area").value = "CNCFlora / CTIC";
+    $("macroeixo").value = "Transversal";
     $("responsavel").value = "Analista ou gestor responsável pelo piloto no CNCFlora";
     $("equipe").value = "CNCFlora; apoio CTIC/Segurança da Informação quando aplicável";
     $("prazo").value = "Piloto controlado de 30 a 90 dias";
