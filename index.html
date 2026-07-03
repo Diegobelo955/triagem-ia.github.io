@@ -445,6 +445,7 @@
       <button type="button" class="light" onclick="preencherExemploAdminSEI()">Exemplo: Administração/SEI + minuta de ofício</button>
       <button type="button" class="light" onclick="preencherExemploDIPEQ()">Exemplo: DIPEQ + imagens de herbário</button>
       <button type="button" class="light" onclick="preencherExemploCTIC()">Exemplo: CTIC + assistente de codificação</button>
+      <button type="button" class="light" onclick="abrirExplicacaoAlgoritmo()">Como funciona o algoritmo</button>
       <button type="button" class="light" onclick="gerarRelatorio()">Atualizar resultado</button>
     </div>
   </div>
@@ -452,7 +453,7 @@
   <div id="draftBanner" class="draft-banner container"></div>
   <div class="print-header">
     <strong>JBRJ — GT-IA — Triagem de Iniciativa de IA</strong><br>
-    Versão do framework: MVP v5.1 | Data de impressão: <span id="printDate"></span>
+    Versão do framework: MVP v5.2 | Data de impressão: <span id="printDate"></span>
   </div>
   <button type="button" class="floating-result" onclick="document.getElementById('painelResultado').scrollIntoView({behavior:'smooth'})">Ver resultado ↑</button>
 
@@ -891,7 +892,8 @@
           <button type="button" class="light" onclick="compartilharGestor()">Compartilhar com gestor</button>
           <button type="button" class="light" onclick="baixarTXT()">Baixar TXT</button>
           <button type="button" class="light" onclick="baixarJSON()">Baixar JSON</button>
-          <button type="button" class="light" onclick="window.print()">Imprimir/PDF</button>
+          <button type="button" class="light" onclick="baixarPDFRelatorio()">Baixar PDF visual</button>
+          <button type="button" class="light" onclick="window.print()">Imprimir página</button>
           <button type="button" class="danger" onclick="limparTudo()">Limpar</button>
         </div>
 
@@ -1567,12 +1569,12 @@ Observação: resultado de apoio, sujeito à Política de IA do JBRJ e à manife
 
   function salvarRascunhoSessao() {
     if (location.hash.startsWith("#state=")) return;
-    sessionStorage.setItem("triagemIAJBRJ_draft_v5_1", JSON.stringify(serializeForm()));
+    sessionStorage.setItem("triagemIAJBRJ_draft_v5_2", JSON.stringify(serializeForm()));
   }
 
   function carregarRascunhoSessao() {
     if (location.hash.startsWith("#state=")) return false;
-    const raw = sessionStorage.getItem("triagemIAJBRJ_draft_v5_1");
+    const raw = sessionStorage.getItem("triagemIAJBRJ_draft_v5_2");
     if (!raw) return false;
     try {
       applyState(JSON.parse(raw));
@@ -1586,7 +1588,7 @@ Observação: resultado de apoio, sujeito à Política de IA do JBRJ e à manife
   }
 
   function descartarRascunho() {
-    sessionStorage.removeItem("triagemIAJBRJ_draft_v5_1");
+    sessionStorage.removeItem("triagemIAJBRJ_draft_v5_2");
     $("draftBanner").style.display = "none";
   }
 
@@ -1600,16 +1602,16 @@ Observação: resultado de apoio, sujeito à Política de IA do JBRJ e à manife
       data: new Date().toLocaleString("pt-BR")
     };
     let hist = [];
-    try { hist = JSON.parse(sessionStorage.getItem("triagemIAJBRJ_history_v5_1") || "[]"); } catch(e) {}
+    try { hist = JSON.parse(sessionStorage.getItem("triagemIAJBRJ_history_v5_2") || "[]"); } catch(e) {}
     hist.unshift(item);
     hist = hist.slice(0, 5);
-    sessionStorage.setItem("triagemIAJBRJ_history_v5_1", JSON.stringify(hist));
+    sessionStorage.setItem("triagemIAJBRJ_history_v5_2", JSON.stringify(hist));
     renderHistoricoSessao();
   }
 
   function renderHistoricoSessao() {
     let hist = [];
-    try { hist = JSON.parse(sessionStorage.getItem("triagemIAJBRJ_history_v5_1") || "[]"); } catch(e) {}
+    try { hist = JSON.parse(sessionStorage.getItem("triagemIAJBRJ_history_v5_2") || "[]"); } catch(e) {}
     const box = $("historicoProjetos");
     if (!box) return;
     if (!hist.length) {
@@ -1669,7 +1671,7 @@ Observação: resultado de apoio, sujeito à Política de IA do JBRJ e à manife
     $("frequencia").value = "pontual";
     $("relatorio").textContent = "Nenhum relatório gerado ainda.";
     $("resumoSEI").textContent = "Nenhum resumo gerado ainda.";
-    sessionStorage.removeItem("triagemIAJBRJ_draft_v5_1");
+    sessionStorage.removeItem("triagemIAJBRJ_draft_v5_2");
     renderResultado();
   }
 
@@ -1829,6 +1831,475 @@ Observação: resultado de apoio, sujeito à Política de IA do JBRJ e à manife
       return false;
     }
   }
+
+
+  function valorOuNaoInformado(v) {
+    return v && String(v).trim() ? String(v).trim() : "Não informado";
+  }
+
+  function listaHtmlPdf(lista) {
+    if (!lista || !lista.length) return "<li>Não informado</li>";
+    return lista.map(item => `<li>${escapeHtml(item)}</li>`).join("");
+  }
+
+  function textoHtmlPdf(v) {
+    return escapeHtml(valorOuNaoInformado(v)).replace(/\n/g, "<br>");
+  }
+
+  function abrirExplicacaoAlgoritmo() {
+    const w = window.open("", "_blank");
+    if (!w) {
+      alert("O navegador bloqueou a nova aba. Permita pop-ups para abrir a explicação do algoritmo.");
+      return;
+    }
+
+    const htmlExplicacao = `<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Como funciona o algoritmo — Triagem IA JBRJ</title>
+  <style>
+    :root {
+      --blue: #174a78;
+      --blue2: #0f3558;
+      --light-blue: #eaf3fb;
+      --border: #d7dee8;
+      --text: #1f2937;
+      --muted: #5b6472;
+      --bg: #f6f8fb;
+      --ok: #e7f6ea;
+      --warn: #fff8e6;
+      --danger: #fde8e8;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Arial, Helvetica, sans-serif; color: var(--text); background: var(--bg); line-height: 1.5; }
+    header { background: linear-gradient(135deg, var(--blue), var(--blue2)); color: white; padding: 30px 22px; border-bottom: 5px solid #f4c430; }
+    .wrap { width: min(1050px, calc(100% - 28px)); margin: 0 auto; }
+    h1 { margin: 0 0 8px; font-size: 30px; }
+    h2 { color: var(--blue2); margin: 22px 0 10px; }
+    h3 { margin: 16px 0 8px; color: var(--blue2); }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 18px 0; }
+    .card { background: white; border: 1px solid var(--border); border-radius: 14px; padding: 16px; box-shadow: 0 8px 18px rgba(15, 53, 88, .08); }
+    .badge { display: inline-block; padding: 5px 9px; border-radius: 999px; font-size: 12px; font-weight: 700; background: var(--light-blue); border: 1px solid #8ab4d6; }
+    .ok { background: var(--ok); }
+    .warn { background: var(--warn); }
+    .danger { background: var(--danger); }
+    table { border-collapse: collapse; width: 100%; background: white; margin-top: 10px; font-size: 14px; }
+    th, td { border: 1px solid var(--border); padding: 10px; vertical-align: top; }
+    th { background: var(--blue); color: white; text-align: left; }
+    .flow { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; align-items: center; gap: 10px; margin: 16px 0; }
+    .node { background: white; border: 1px solid var(--border); border-radius: 14px; padding: 14px; min-height: 110px; }
+    .arrow { font-size: 26px; color: var(--blue); font-weight: 700; }
+    .callout { border-left: 6px solid var(--blue); background: white; border-radius: 12px; padding: 14px 16px; margin: 16px 0; }
+    ul { margin-top: 6px; }
+    @media (max-width: 850px) {
+      .grid, .flow { grid-template-columns: 1fr; }
+      .arrow { transform: rotate(90deg); text-align: center; }
+    }
+    @media print {
+      body { background: white; }
+      header { color: black; background: white; border-bottom: 2px solid #000; }
+      .card, .node, .callout { box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>Como funciona o algoritmo da Triagem IA JBRJ</h1>
+    <p>Explicação operacional do enquadramento de risco, dos fatores de trava e do cálculo da pontuação orientativa — MVP v5.2.</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="callout">
+    <strong>Ideia central:</strong> o algoritmo não “aprova” uma iniciativa. Ele organiza uma triagem proporcional ao risco, indicando se o caso é uso assistivo, piloto de baixo risco, projeto de médio risco ou alto risco/institucionalização.
+  </div>
+
+  <section class="grid">
+    <div class="card">
+      <span class="badge ok">Baixo esforço</span>
+      <h3>Uso assistivo</h3>
+      <p>Casos simples com dados públicos, revisão humana e sem integração, sem base persistente e sem decisão automatizada.</p>
+    </div>
+    <div class="card">
+      <span class="badge warn">Governança técnica</span>
+      <h3>Médio risco</h3>
+      <p>Casos com processamento em lote, embeddings, banco vetorial, uso continuado, custo, integração limitada ou apoio relevante à decisão humana.</p>
+    </div>
+    <div class="card">
+      <span class="badge danger">Trava de risco</span>
+      <h3>Alto risco</h3>
+      <p>Casos com dados pessoais/sensíveis, coordenadas protegidas, dado confidencial, decisão automatizada, institucionalização ou provedor externo com dado não público.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>1. Como o nível de risco é definido</h2>
+    <div class="flow">
+      <div class="node">
+        <h3>Entrada</h3>
+        <p>O usuário informa finalidade, dados, ferramenta, ambiente, frequência de uso, integração e controles.</p>
+      </div>
+      <div class="arrow">→</div>
+      <div class="node">
+        <h3>Fatores objetivos</h3>
+        <p>O sistema verifica marcações explícitas: dados sensíveis, API externa, decisão automatizada, banco vetorial, uso continuado, logs etc.</p>
+      </div>
+      <div class="arrow">→</div>
+      <div class="node">
+        <h3>Resultado</h3>
+        <p>O maior fator de risco prevalece. Um fator de alto risco basta para elevar o enquadramento.</p>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr><th>Nível</th><th>Gatilhos típicos</th><th>Encaminhamento</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Uso assistivo com dados públicos</strong></td>
+          <td>Dado público, uso pontual, revisão humana, sem integração crítica, sem armazenamento persistente relevante.</td>
+          <td>Uso permitido, sem aprovação prévia como regra. Pode gerar resumo simples.</td>
+        </tr>
+        <tr>
+          <td><strong>Projeto-piloto de baixo risco</strong></td>
+          <td>Teste controlado com dados públicos/anonimizados, escopo limitado e revisão humana.</td>
+          <td>Registro simplificado pela área responsável.</td>
+        </tr>
+        <tr>
+          <td><strong>Projeto de médio risco</strong></td>
+          <td>Processamento em lote, embeddings, banco vetorial, armazenamento persistente, custo, uso continuado, apoio à decisão humana ou integração limitada.</td>
+          <td>Registro técnico, controles mínimos e orientação da área competente quando aplicável.</td>
+        </tr>
+        <tr>
+          <td><strong>Alto risco ou institucionalização</strong></td>
+          <td>Dado pessoal/sensível, dado confidencial, coordenada protegida, decisão automatizada, integração crítica, provedor externo com dado não público ou escala institucional.</td>
+          <td>Manifestação prévia da instância competente, AIE completo ou equivalente e análises complementares.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>2. Diferença entre fator de risco e alerta textual</h2>
+    <div class="callout">
+      Na versão v5.2, menções textuais a termos sensíveis geram apenas <strong>alertas de confirmação</strong>. Elas não elevam sozinhas o projeto para alto risco.
+    </div>
+    <p><strong>Exemplo:</strong> se o texto menciona “artigos científicos” ou “organizar informações”, isso pode gerar alerta sobre direito autoral ou revisão de dados, mas não transforma automaticamente o projeto em alto risco.</p>
+    <p><strong>O risco sobe de fato</strong> quando o usuário marca explicitamente dado pessoal, dado sensível, coordenada protegida, dado confidencial, decisão automatizada ou outro fator objetivo.</p>
+  </section>
+
+  <section>
+    <h2>3. Como a pontuação é calculada</h2>
+    <p>A nota vai de 0 a 16 pontos. Ela serve para priorização e comparação entre iniciativas, mas não substitui o enquadramento de risco.</p>
+    <table>
+      <thead>
+        <tr><th>Critério</th><th>Máximo</th><th>O que avalia</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Aderência institucional</td><td>3</td><td>Conexão com pesquisa, ensino, conservação, gestão, dados, TIC ou administração do JBRJ.</td></tr>
+        <tr><td>Impacto esperado</td><td>3</td><td>Redução de tempo, retrabalho, aumento de qualidade, acesso a dados ou apoio à decisão humana.</td></tr>
+        <tr><td>Viabilidade</td><td>3</td><td>Existência de dados, equipe, ferramenta, ambiente e condições mínimas para iniciar.</td></tr>
+        <tr><td>Risco controlável</td><td>3</td><td>Se os riscos podem ser mitigados com revisão humana, logs, anonimização, controle de acesso e orientação técnica.</td></tr>
+        <tr><td>Reutilização</td><td>2</td><td>Potencial de reaproveitamento por outras áreas do JBRJ.</td></tr>
+        <tr><td>Custo proporcional</td><td>2</td><td>Compatibilidade entre custo, maturidade, benefício e disponibilidade institucional.</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Interpretação da nota</h3>
+    <table>
+      <thead><tr><th>Faixa</th><th>Leitura</th></tr></thead>
+      <tbody>
+        <tr><td>12 a 16</td><td>Boa aderência, impacto e viabilidade. Priorizar como piloto, desde que não haja fator de alto risco.</td></tr>
+        <tr><td>8 a 11</td><td>Promissora, mas com lacunas de escopo, equipe, infraestrutura ou risco. Ajustar e reavaliar.</td></tr>
+        <tr><td>0 a 7</td><td>Pouco madura ou com benefício insuficientemente demonstrado. Não priorizar no ciclo inicial.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>4. Regra mais importante</h2>
+    <div class="callout">
+      <strong>A pontuação alta não neutraliza alto risco.</strong> Um projeto pode ter 14/16 e ainda exigir manifestação prévia se envolver dado sensível, decisão automatizada, integração crítica ou institucionalização.
+    </div>
+  </section>
+</main>
+</body>
+</html>`;
+
+    w.document.open();
+    w.document.write(htmlExplicacao);
+    w.document.close();
+  }
+
+  function gerarHtmlPDFRelatorio() {
+    renderResultado();
+    const d = coletarDados();
+    const r = inferir();
+    const controlesLista = d.resultado_automatico.controles_recomendados || [];
+    const fatoresAlto = d.resultado_automatico.fatores_de_trava_alto_risco || [];
+    const fatoresMedio = d.resultado_automatico.fatores_de_medio_risco || [];
+    const alertas = d.resultado_automatico.alertas_textuais_de_confirmacao || [];
+    const classificacoes = d.dados.classificacoes_marcadas || [];
+    const resultados = d.objetivo_escopo.resultados_esperados || [];
+    const controlesMarcados = d.supervisao_controles_indicadores.controles_marcados || [];
+
+    const badgeClass = r.boxClass === "danger" ? "danger" : (r.boxClass === "medium" ? "medium" : "ok");
+    const dataGeracao = new Date().toLocaleString("pt-BR");
+
+    return `<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Relatório de Triagem IA JBRJ - ${escapeHtml(d.identificacao.nome || "iniciativa")}</title>
+  <style>
+    :root {
+      --blue: #174a78;
+      --blue2: #0f3558;
+      --gold: #f4c430;
+      --border: #d7dee8;
+      --text: #1f2937;
+      --muted: #5b6472;
+      --bg: #f6f8fb;
+      --ok: #e7f6ea;
+      --ok-border: #73b883;
+      --medium: #fff8e6;
+      --medium-border: #d6a53a;
+      --danger: #fde8e8;
+      --danger-border: #e56b6f;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Arial, Helvetica, sans-serif; color: var(--text); background: var(--bg); line-height: 1.42; }
+    .page { width: min(1100px, calc(100% - 32px)); margin: 24px auto; background: white; border: 1px solid var(--border); border-radius: 18px; overflow: hidden; }
+    header { background: linear-gradient(135deg, var(--blue), var(--blue2)); color: white; padding: 26px 30px; border-bottom: 6px solid var(--gold); }
+    header h1 { margin: 0 0 6px; font-size: 28px; }
+    header p { margin: 3px 0; opacity: .95; }
+    main { padding: 24px 30px 30px; }
+    .meta-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 18px 0; }
+    .metric { border: 1px solid var(--border); border-radius: 14px; padding: 12px; background: #fbfdff; }
+    .metric small { display: block; color: var(--muted); margin-bottom: 4px; }
+    .metric strong { display: block; font-size: 18px; color: var(--blue2); }
+    .badge { display: inline-block; padding: 7px 11px; border-radius: 999px; font-weight: 700; font-size: 13px; }
+    .badge.ok { background: var(--ok); border: 1px solid var(--ok-border); }
+    .badge.medium { background: var(--medium); border: 1px solid var(--medium-border); }
+    .badge.danger { background: var(--danger); border: 1px solid var(--danger-border); }
+    h2 { color: var(--blue2); margin: 24px 0 10px; font-size: 19px; border-bottom: 2px solid #e6edf5; padding-bottom: 6px; }
+    h3 { color: var(--blue2); margin: 16px 0 8px; font-size: 15px; }
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .box { border: 1px solid var(--border); border-radius: 14px; padding: 14px; background: #fff; margin: 10px 0; }
+    .box.ok { background: var(--ok); border-color: var(--ok-border); }
+    .box.medium { background: var(--medium); border-color: var(--medium-border); }
+    .box.danger { background: var(--danger); border-color: var(--danger-border); }
+    .label { color: var(--muted); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; margin-bottom: 4px; }
+    p { margin: 6px 0; }
+    ul { margin: 6px 0 0 20px; padding: 0; }
+    li { margin: 4px 0; }
+    table { border-collapse: collapse; width: 100%; margin-top: 8px; font-size: 13px; }
+    th, td { border: 1px solid var(--border); padding: 9px; vertical-align: top; }
+    th { background: var(--blue); color: white; text-align: left; }
+    .score-bar { height: 12px; border-radius: 999px; background: #e6edf5; overflow: hidden; margin-top: 8px; }
+    .score-fill { height: 100%; width: ${Math.max(0, Math.min(100, (r.score / 16) * 100))}%; background: var(--blue); }
+    .footer { color: var(--muted); font-size: 12px; margin-top: 24px; border-top: 1px solid var(--border); padding-top: 12px; }
+    @media (max-width: 850px) {
+      .meta-grid, .two { grid-template-columns: 1fr; }
+    }
+    @media print {
+      body { background: white; }
+      .page { margin: 0; width: 100%; border: 0; border-radius: 0; }
+      header { color: black; background: white; border-bottom: 3px solid #000; }
+      .metric, .box { break-inside: avoid; }
+      h2 { break-after: avoid; }
+      @page { margin: 14mm; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <h1>Relatório de Triagem de Iniciativa de IA</h1>
+      <p><strong>JBRJ — GT-IA — MVP v5.2</strong></p>
+      <p>Gerado em ${escapeHtml(dataGeracao)}. Documento de apoio à avaliação proporcional de risco.</p>
+    </header>
+
+    <main>
+      <section class="meta-grid">
+        <div class="metric"><small>Iniciativa</small><strong>${escapeHtml(valorOuNaoInformado(d.identificacao.nome))}</strong></div>
+        <div class="metric"><small>Área</small><strong>${escapeHtml(valorOuNaoInformado(d.identificacao.area))}</strong></div>
+        <div class="metric"><small>Macroeixo</small><strong>${escapeHtml(valorOuNaoInformado(d.identificacao.macroeixo))}</strong></div>
+        <div class="metric"><small>Pontuação</small><strong>${r.score}/16</strong><div class="score-bar"><div class="score-fill"></div></div></div>
+      </section>
+
+      <section class="box ${badgeClass}">
+        <div class="label">Nível sugerido</div>
+        <p><span class="badge ${badgeClass}">${escapeHtml(r.nivel)}</span></p>
+        <p><strong>Encaminhamento:</strong> ${escapeHtml(r.encaminhamento)}</p>
+        <p><strong>Uso do AIE:</strong> ${escapeHtml(r.aie)}</p>
+      </section>
+
+      <section>
+        <h2>1. Identificação e escopo</h2>
+        <div class="two">
+          <div class="box">
+            <div class="label">Responsável / equipe</div>
+            <p><strong>Responsável:</strong> ${escapeHtml(valorOuNaoInformado(d.identificacao.responsavel))}</p>
+            <p><strong>Equipe:</strong> ${escapeHtml(valorOuNaoInformado(d.identificacao.equipe))}</p>
+            <p><strong>Processo SEI:</strong> ${escapeHtml(valorOuNaoInformado(d.identificacao.processo_sei))}</p>
+            <p><strong>Prazo:</strong> ${escapeHtml(valorOuNaoInformado(d.identificacao.prazo))}</p>
+          </div>
+          <div class="box">
+            <div class="label">Enquadramento operacional</div>
+            <p><strong>Exemplo orientador:</strong> ${escapeHtml(valorOuNaoInformado(d.objetivo_escopo.exemplo_orientador))}</p>
+            <p><strong>Decisão:</strong> ${escapeHtml(valorOuNaoInformado(d.objetivo_escopo.decisao))}</p>
+            <p><strong>Resultados esperados:</strong></p>
+            <ul>${listaHtmlPdf(resultados)}</ul>
+          </div>
+        </div>
+
+        <div class="box">
+          <div class="label">Problema a resolver</div>
+          <p>${textoHtmlPdf(d.objetivo_escopo.problema)}</p>
+        </div>
+        <div class="box">
+          <div class="label">O que a IA fará</div>
+          <p>${textoHtmlPdf(d.objetivo_escopo.o_que_a_ia_fara)}</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>2. Dados e tratamento previsto</h2>
+        <div class="box">
+          <div class="label">Dados utilizados</div>
+          <p>${textoHtmlPdf(d.dados.dados_principais)}</p>
+        </div>
+        <div class="two">
+          <div class="box">
+            <div class="label">Dados essenciais</div>
+            <p>${textoHtmlPdf(d.dados.dados_essenciais)}</p>
+          </div>
+          <div class="box">
+            <div class="label">Fontes</div>
+            <p>${textoHtmlPdf(d.dados.fontes)}</p>
+          </div>
+        </div>
+        <div class="box">
+          <div class="label">Tratamento previsto</div>
+          <p>${textoHtmlPdf(d.dados.tratamento_previsto)}</p>
+        </div>
+        <div class="box">
+          <div class="label">Classificações marcadas</div>
+          <ul>${listaHtmlPdf(classificacoes)}</ul>
+        </div>
+      </section>
+
+      <section>
+        <h2>3. Ferramenta, ambiente e infraestrutura</h2>
+        <table>
+          <tbody>
+            <tr><th>Ferramenta/modelo/provedor</th><td>${escapeHtml(valorOuNaoInformado(d.ferramenta_ambiente.ferramenta || d.avaliacao.mini_ferramenta))}</td></tr>
+            <tr><th>Tipo de solução</th><td>${escapeHtml(valorOuNaoInformado(d.ferramenta_ambiente.tipo_solucao))}</td></tr>
+            <tr><th>Ambiente</th><td>${escapeHtml(valorOuNaoInformado(d.ferramenta_ambiente.ambiente))}</td></tr>
+            <tr><th>Uso previsto</th><td>${escapeHtml(valorOuNaoInformado(d.ferramenta_ambiente.frequencia))}</td></tr>
+            <tr><th>Processamento em lote</th><td>${d.ferramenta_ambiente.processamento_lote ? "Sim" : "Não"}</td></tr>
+            <tr><th>Armazenamento persistente</th><td>${d.ferramenta_ambiente.armazenamento_persistente ? "Sim" : "Não"}</td></tr>
+            <tr><th>Embeddings/banco vetorial</th><td>${d.ferramenta_ambiente.banco_vetorial_embeddings ? "Sim" : "Não"}</td></tr>
+            <tr><th>Logs/permissões previstos</th><td>${d.ferramenta_ambiente.logs_previstos ? "Sim" : "Não"}</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>4. Supervisão, controles e indicadores</h2>
+        <div class="two">
+          <div class="box">
+            <div class="label">Validação humana</div>
+            <p>${escapeHtml(valorOuNaoInformado(d.supervisao_controles_indicadores.validador || d.avaliacao.mini_validador))}</p>
+            <p><strong>Indicador mínimo:</strong> ${escapeHtml(valorOuNaoInformado(d.supervisao_controles_indicadores.indicador))}</p>
+            <p><strong>Como será medido:</strong> ${textoHtmlPdf(d.supervisao_controles_indicadores.medicao)}</p>
+          </div>
+          <div class="box">
+            <div class="label">Controles marcados</div>
+            <ul>${listaHtmlPdf(controlesMarcados)}</ul>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>5. Pontuação orientativa</h2>
+        <table>
+          <thead><tr><th>Critério</th><th>Pontos</th></tr></thead>
+          <tbody>
+            <tr><td>Aderência institucional</td><td>${d.pontuacao.aderencia}/3</td></tr>
+            <tr><td>Impacto esperado</td><td>${d.pontuacao.impacto}/3</td></tr>
+            <tr><td>Viabilidade</td><td>${d.pontuacao.viabilidade}/3</td></tr>
+            <tr><td>Risco controlável</td><td>${d.pontuacao.risco_controlavel}/3</td></tr>
+            <tr><td>Reutilização</td><td>${d.pontuacao.reutilizacao}/2</td></tr>
+            <tr><td>Custo proporcional</td><td>${d.pontuacao.custo_proporcional}/2</td></tr>
+            <tr><th>Total</th><th>${d.pontuacao.total}/16</th></tr>
+          </tbody>
+        </table>
+        <div class="box">
+          <div class="label">Leitura da pontuação</div>
+          <p>${escapeHtml(d.pontuacao.leitura)}</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>6. Fatores identificados e controles recomendados</h2>
+        <div class="two">
+          <div class="box danger">
+            <div class="label">Fatores de trava / alto risco</div>
+            <ul>${listaHtmlPdf(fatoresAlto)}</ul>
+          </div>
+          <div class="box medium">
+            <div class="label">Fatores de médio risco</div>
+            <ul>${listaHtmlPdf(fatoresMedio)}</ul>
+          </div>
+        </div>
+        <div class="box">
+          <div class="label">Alertas textuais de confirmação</div>
+          <ul>${listaHtmlPdf(alertas)}</ul>
+        </div>
+        <div class="box">
+          <div class="label">Controles recomendados</div>
+          <ul>${listaHtmlPdf(controlesLista)}</ul>
+        </div>
+      </section>
+
+      <section>
+        <h2>7. Observações do avaliador</h2>
+        <div class="box">
+          <p>${textoHtmlPdf(d.avaliacao.observacoes_avaliador)}</p>
+        </div>
+      </section>
+
+      <div class="footer">
+        Relatório gerado pelo MVP Triagem IA JBRJ v5.2. Este documento é instrumento de apoio e não substitui avaliação institucional, jurídica, técnica, científica, de segurança ou de proteção de dados quando aplicável.
+      </div>
+    </main>
+  </div>
+</body>
+</html>`;
+  }
+
+  function baixarPDFRelatorio() {
+    gerarRelatorio();
+    gerarResumoSEI();
+    const w = window.open("", "_blank");
+    if (!w) {
+      alert("O navegador bloqueou a nova aba. Permita pop-ups para abrir o relatório visual em PDF.");
+      return;
+    }
+    w.document.open();
+    w.document.write(gerarHtmlPDFRelatorio());
+    w.document.close();
+    setTimeout(() => {
+      w.focus();
+      w.print();
+    }, 500);
+  }
+
 
   $("printDate").textContent = new Date().toLocaleString("pt-BR");
   if (!carregarEstadoURL()) carregarRascunhoSessao();
