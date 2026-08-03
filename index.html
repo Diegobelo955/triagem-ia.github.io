@@ -2,8 +2,9 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
+  <meta name="description" content="Avaliação de Iniciativa/Uso de IA do JBRJ com AIE integrado e exemplos práticos por nível de risco." />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Avaliação de Projetos de IA JBRJ — AIE integrado</title>
+  <title>Avaliação de Iniciativa/Uso de IA — JBRJ — AIE integrado</title>
   <style>
     :root {
       --blue: #174a78;
@@ -191,6 +192,14 @@
       padding: 9px;
       background: #fbfdff;
       font-weight: 400;
+      cursor: pointer;
+      transition: background .18s ease, border-color .18s ease, box-shadow .18s ease;
+    }
+
+    .check:hover {
+      border-color: #7ba9ce;
+      background: #f0f7ff;
+      box-shadow: 0 2px 8px rgba(23, 74, 120, .06);
     }
 
     .check input { margin-top: 3px; }
@@ -229,6 +238,7 @@
       border: 1px solid var(--border);
       background: var(--light-blue);
       margin-bottom: 12px;
+      transition: background .25s ease, border-color .25s ease;
     }
 
     .result h3 { margin-top: 0; }
@@ -351,6 +361,29 @@
       font-weight: 700;
     }
 
+    .mode-segmented {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      padding: 4px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #eef3f8;
+    }
+
+    .mode-segmented button {
+      background: transparent;
+      color: var(--blue2);
+      border: 0;
+      padding: 8px 10px;
+    }
+
+    .mode-segmented button.active {
+      background: var(--blue);
+      color: #fff;
+      box-shadow: var(--shadow);
+    }
+
     .inline-alert {
       margin-top: 10px;
       padding: 10px 12px;
@@ -396,9 +429,13 @@
     }
 
     .aie-intro {
-      color: var(--muted);
-      font-size: 13px;
-      margin: 0 0 14px;
+      color: #173f35;
+      font-size: 14px;
+      margin: 0 0 16px;
+      padding: 12px 14px;
+      border: 1px solid #b9d3ca;
+      border-radius: 12px;
+      background: #eef7f4;
     }
 
     .aie-question {
@@ -509,6 +546,19 @@
       margin-top: 12px;
     }
 
+    #painelResultado .buttons button:first-child {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 15px;
+    }
+
+    #painelResultado .buttons .danger {
+      flex-basis: 100%;
+      margin-top: 8px;
+      border-top: 1px solid var(--border);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.18);
+    }
+
     button {
       border: 0;
       border-radius: 10px;
@@ -530,13 +580,16 @@
     pre {
       white-space: pre-wrap;
       word-break: break-word;
-      background: #0b1220;
-      color: #e5eefc;
+      background: #f6f8fb;
+      color: var(--text);
+      border: 1px solid var(--border);
       border-radius: 12px;
       padding: 14px;
       max-height: 520px;
       overflow: auto;
-      font-size: 12px;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 13px;
+      line-height: 1.5;
     }
 
     details {
@@ -545,18 +598,199 @@
       padding: 10px 12px;
       background: #fbfdff;
       margin: 10px 0;
+      transition: background .2s ease, border-color .2s ease;
     }
 
     summary {
       cursor: pointer;
       font-weight: 700;
       color: var(--blue2);
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    summary::-webkit-details-marker { display: none; }
+
+    summary::before {
+      content: ">";
+      display: inline-grid;
+      place-items: center;
+      width: 20px;
+      height: 20px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      color: var(--blue);
+      background: #fff;
+      font-size: 12px;
+      transform: rotate(0deg);
+      transition: transform .18s ease;
+    }
+
+    details[open] summary::before {
+      transform: rotate(90deg);
+    }
+
+    .toast-stack {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 120;
+      display: grid;
+      gap: 8px;
+      width: min(360px, calc(100vw - 28px));
+      pointer-events: none;
+    }
+
+    .toast {
+      border-radius: 12px;
+      border: 1px solid var(--ok-border);
+      background: #f0fdf4;
+      color: #173f35;
+      padding: 11px 13px;
+      box-shadow: var(--shadow);
+      font-size: 13px;
+      animation: toastIn .18s ease;
+    }
+
+    .toast.error {
+      border-color: var(--danger-border);
+      background: var(--danger);
+      color: #7f1d1d;
+    }
+
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 110;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      background: rgba(15, 23, 42, .42);
+    }
+
+    .modal-backdrop.open { display: flex; }
+
+    .modal {
+      width: min(460px, 100%);
+      background: #fff;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      box-shadow: 0 20px 45px rgba(15, 23, 42, .2);
+      padding: 18px;
+    }
+
+    .modal h3 {
+      margin: 0 0 8px;
+      color: var(--blue2);
+      font-size: 18px;
+    }
+
+    .modal p {
+      margin: 0 0 14px;
+      color: var(--text);
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
     }
 
     .footer {
       padding: 24px 0 36px;
       color: var(--muted);
       font-size: 12px;
+    }
+
+    .workflow-stepper {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      margin: 14px auto 16px;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(255,255,255,.96);
+      box-shadow: var(--shadow);
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .workflow-step {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 9px 10px;
+      background: #f8fafc;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .workflow-step strong {
+      display: block;
+      color: var(--text);
+      font-size: 13px;
+    }
+
+    .workflow-step.done {
+      background: var(--ok);
+      border-color: var(--ok-border);
+    }
+
+    .workflow-step.active {
+      background: var(--light-blue);
+      border-color: #7ba9ce;
+      box-shadow: inset 0 0 0 2px rgba(23,74,120,.08);
+    }
+
+    .workflow-step.pending {
+      opacity: .72;
+    }
+
+    .workflow-step small {
+      display: block;
+      margin-top: 2px;
+    }
+
+    .phase-notice {
+      margin: 12px 0 16px;
+      padding: 12px 14px;
+      border: 1px solid var(--warn-border);
+      border-radius: 12px;
+      background: var(--warn);
+      color: var(--text);
+    }
+
+    .question-progress {
+      margin: 10px 0 14px;
+      height: 9px;
+      border-radius: 999px;
+      background: #e6edf5;
+      overflow: hidden;
+    }
+
+    .question-progress span {
+      display: block;
+      height: 100%;
+      width: 0%;
+      background: var(--blue);
+      transition: width .2s ease;
+    }
+
+    .section-complete-badge {
+      display: inline-block;
+      margin-left: 8px;
+      color: #166534;
+      font-size: 12px;
+      font-weight: 700;
     }
 
 
@@ -573,6 +807,43 @@
       margin: 0 0 10px;
       color: #173f35;
       font-size: 18px;
+    }
+
+    .aie-main-section.collapsed .pa-section-questions {
+      display: none;
+    }
+
+    .aie-main-section.collapsed {
+      background: #f0fdf4;
+      border-color: var(--ok-border);
+    }
+
+    .aie-main-section h3 button {
+      margin-left: 8px;
+      padding: 4px 8px;
+      border-radius: 8px;
+      font-size: 12px;
+      background: #fff;
+      color: var(--blue);
+      border: 1px solid var(--blue);
+    }
+
+    .question-counter {
+      display: inline-block;
+      margin-right: 8px;
+      padding: 3px 7px;
+      border-radius: 999px;
+      border: 1px solid #b9d3ca;
+      background: #eef7f4;
+      color: #173f35;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .justification-block {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px dashed var(--border);
     }
 
     .aie-main-status {
@@ -610,20 +881,46 @@
       border-radius: 10px;
       border: 1px solid var(--border);
       background: #f8fafc;
+      color: var(--muted);
       padding: 8px 6px;
       text-align: center;
       font-size: 12px;
       font-weight: 700;
+      transition: background .2s ease, color .2s ease, transform .2s ease;
     }
 
     .level-scale-mini span.active {
-      outline: 3px solid rgba(23,74,120,.22);
       transform: translateY(-2px);
-      background: #fff;
+      color: #fff;
+      border-color: transparent;
+    }
+
+    .level-scale-mini span.active.ok { background: #15803d; }
+    .level-scale-mini span.active.medium { background: #b7791f; }
+    .level-scale-mini span.active.danger { background: #b42318; }
+
+    .risk-icon {
+      display: inline-grid;
+      place-items: center;
+      width: 24px;
+      height: 24px;
+      margin-right: 6px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.72);
+      border: 1px solid currentColor;
+      font-size: 14px;
     }
 
     @media (max-width: 700px) {
+      .workflow-stepper { grid-template-columns: 1fr; position: static; }
       .level-scale-mini { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 980px) {
+      pre {
+        max-height: none;
+        overflow: visible;
+      }
     }
 
     @media print {
@@ -646,18 +943,41 @@
 <body>
 <header>
   <div class="container">
-    <h1>Avaliação de Projetos de IA — JBRJ + AIE integrado</h1>
+    <h1>Avaliação de Iniciativa/Uso de IA — JBRJ + AIE integrado</h1>
     <p class="subtitle">Preenchendo: <strong id="etapaAtual">AIE — Avaliação de Impacto Ético</strong></p>
   </div>
 </header>
 
 <div class="container">
+  <nav class="workflow-stepper" id="workflowStepper" aria-label="Etapas da avaliação">
+    <div class="workflow-step active" data-step="risk"><strong>1. AIE — Risco</strong><small>~5 min</small></div>
+    <div class="workflow-step pending" data-step="principal"><strong>2. AIE — Questionário</strong><small>~15–45 min</small></div>
+    <div class="workflow-step pending" data-step="ficha"><strong>3. Ficha JBRJ</strong><small>~10 min</small></div>
+    <div class="workflow-step pending" data-step="resultado"><strong>4. Resultado</strong><small>revisão final</small></div>
+  </nav>
+
+  <div class="notice" id="inicioExemplos">
+    <strong>Exemplos práticos do AIE:</strong>
+    <p class="small">Clique em um nível para preencher automaticamente um caso demonstrativo e visualizar como a classificação é formada.</p>
+    <div class="quick-actions">
+      <button type="button" onclick="abrirPreviaFichaJBRJ()">Visualizar Ficha JBRJ (sem preencher)</button>
+      <button type="button" class="light" data-aie-exemplo="baixo">Exemplo: risco baixo</button>
+      <button type="button" class="light" data-aie-exemplo="medio">Exemplo: risco médio</button>
+      <button type="button" class="light" data-aie-exemplo="alto">Exemplo: risco alto</button>
+      <button type="button" class="light" data-aie-exemplo="excessivo">Exemplo: risco excessivo</button>
+    </div>
+  </div>
+
   <div class="notice post-aie-only" id="noticeFluxo">
     <strong>Uso recomendado:</strong> utilize esta ferramenta para testar o enquadramento de uma iniciativa de IA, identificar riscos, calcular a pontuação orientativa e gerar um relatório copiável para análise interna.
     <br><span class="small">Este MVP não substitui a Política de IA, a manifestação da instância competente, a análise da CTIC, Segurança da Informação, Encarregado LGPD, jurídico ou governança quando aplicável.</span>
 
     <div class="mode-bar">
-      <label><input type="checkbox" id="modoRapido" onchange="alternarModoRapido()"> Modo rápido / fast track</label>
+      <input type="checkbox" id="modoRapido" onchange="alternarModoRapido()" style="display:none">
+      <div class="mode-segmented" role="group" aria-label="Modo de preenchimento">
+        <button type="button" id="btnModoCompleto" class="active" onclick="setModoRapido(false)">Avaliação completa</button>
+        <button type="button" id="btnModoRapido" onclick="setModoRapido(true)">Modo rápido</button>
+      </div>
       <span class="small">Mostra apenas os campos essenciais e gera uma classificação preliminar.</span>
     </div>
 
@@ -675,7 +995,7 @@
   <div id="draftBanner" class="draft-banner container"></div>
   <div class="print-header">
     <strong>JBRJ — GT-IA — Triagem de Iniciativa de IA</strong><br>
-    Versão do framework: MVP v5.4 | Data de impressão: <span id="printDate"></span>
+    Versão do framework: MVP v6.6 | Data de impressão: <span id="printDate"></span>
   </div>
   <button type="button" class="floating-result post-aie-only" id="btnResultadoFlutuante" onclick="document.getElementById('painelResultado').scrollIntoView({behavior:'smooth'})">Ver resultado ↑</button>
 
@@ -685,13 +1005,13 @@
       <section class="card aie-card" id="secAIE">
         <h2>AIE</h2>
         <div class="content">
-          <p class="aie-intro">Preencha a avaliação de riscos. A próxima etapa será definida automaticamente ao final.</p>
+          <p class="aie-intro"><strong>Antes de tudo, responda estas 9 perguntas</strong> para definir o nível de risco da sua iniciativa. O tipo de ficha a preencher será escolhido automaticamente.</p>
 
           <div class="aie-main-section">
             <h3>Dados iniciais do AIE</h3>
             <div class="row">
               <div class="field">
-                <label for="aieNomeProjeto">Nome do Projeto/Solução/Ferramenta de IA</label>
+                <label for="aieNomeProjeto">Nome da Iniciativa/Uso/Solução/Ferramenta de IA</label>
                 <input id="aieNomeProjeto" type="text" placeholder="Ex.: Leitura assistida de literatura científica no CNCFlora">
               </div>
               <div class="field">
@@ -721,7 +1041,7 @@
           <div id="aiePrincipalStatus" class="aie-main-status">Aguardando classificação preliminar do AIE.</div>
           <div class="aie-main-toolbar">
             <button type="button" class="light" onclick="revisarAIE()">Revisar classificação de risco</button>
-            <button type="button" class="light" onclick="scrollParaFicha()">Ir para ficha JBRJ</button>
+            <button type="button" class="light" id="btnIrFicha" onclick="scrollParaFicha()">Concluir AIE para liberar ficha</button>
           </div>
           <div id="aiePrincipalPerguntas"></div>
           <div id="aiePrincipalResultado" class="aie-main-result result info">
@@ -743,14 +1063,18 @@
       <section class="card" id="secIdentificacao">
         <h2>1. Identificação da iniciativa</h2>
         <div class="content">
+          <div class="box ok">
+            <strong>Integração com o AIE:</strong> o nome da iniciativa é trazido automaticamente. Os demais campos abaixo são informações administrativas complementares da Ficha JBRJ.
+          </div>
           <div class="row">
             <div class="field">
               <label for="nome" class="required">Nome da iniciativa</label>
               <input id="nome" type="text" placeholder="Ex.: Leitura assistida de literatura científica no CNCFlora">
+              <div class="hint">Preenchido automaticamente a partir do AIE; pode ser refinado na ficha.</div>
             </div>
             <div class="field">
               <label for="area" class="required">Área responsável</label>
-              <input id="area" type="text" placeholder="Ex.: CNCFlora, DIPEQ, ENBT, CTIC, DG">
+              <input id="area" type="text" placeholder="Ex.: CNCFlora, DIPEQ, ENBT, CTIC ou DG">
             </div>
           </div>
 
@@ -759,23 +1083,23 @@
               <label for="macroeixo" class="required">Macroeixo</label>
               <select id="macroeixo">
                 <option value="">Selecione</option>
-                <option>Pesquisa</option>
-                <option>Ensino</option>
-                <option>Administração</option>
-                <option>TIC, Dados e Segurança</option>
-                <option>Transversal</option>
+                <option value="Atividade finalística técnico-científica">Atividade finalística técnico-científica</option>
+                <option value="Atividade finalística de ensino">Atividade finalística de ensino</option>
+                <option value="Administração">Administração</option>
+                <option value="TIC, dados e segurança">TIC, dados e segurança</option>
+                <option value="Transversal">Transversal</option>
               </select>
             </div>
             <div class="field">
               <label for="responsavel">Responsável técnico ou gestor</label>
-              <input id="responsavel" type="text" placeholder="Ex.: analista responsável pelo piloto; coordenador da área; servidor designado">
+              <input id="responsavel" type="text" placeholder="Nome do responsável técnico ou gestor da iniciativa">
             </div>
           </div>
 
           <div class="row">
             <div class="field">
               <label for="equipe">Equipe envolvida</label>
-              <input id="equipe" type="text" placeholder="Ex.: analistas CNCFlora, CTIC, Segurança da Informação, bolsistas autorizados">
+              <input id="equipe" type="text" placeholder="Áreas, servidores e colaboradores envolvidos">
             </div>
             <div class="field">
               <label for="sei">Processo SEI, se houver</label>
@@ -790,343 +1114,148 @@
             </div>
             <div class="field">
               <label for="prazo">Prazo estimado</label>
-              <input id="prazo" type="text" placeholder="Ex.: 30 dias para piloto controlado; 3 meses para validação; a definir">
+              <input id="prazo" type="text" placeholder="Ex.: 30 dias, 3 meses ou uso continuado">
             </div>
           </div>
         </div>
       </section>
 
       <section class="card" id="secObjetivo">
-        <h2>2. Objetivo, escopo e enquadramento</h2>
+        <h2>2. Objetivo e escopo</h2>
         <div class="content">
+          <div class="box ok">
+            <strong>Reaproveitamento:</strong> a finalidade informada no AIE é trazida para esta seção. Ajuste somente se for necessário separar melhor o problema, a atuação da IA e os resultados esperados.
+          </div>
           <div class="field">
             <label for="problema">Problema a resolver</label>
-            <textarea id="problema" placeholder="Ex.: a triagem manual de artigos científicos consome muito tempo e dificulta a padronização das evidências usadas nas avaliações."></textarea>
+            <textarea id="problema" placeholder="Descreva, de forma objetiva, o problema institucional que motivou a iniciativa."></textarea>
           </div>
           <div class="field">
             <label for="iafara">O que a IA fará?</label>
-            <textarea id="iafara" placeholder="Ex.: extrair nome científico, habitat, ameaças, população, ações de conservação, trecho-fonte, página/seção e referência bibliográfica."></textarea>
-          </div>
-
-          <div class="row-3">
-            <div class="field" style="display:none">
-              <label for="exemploOrientador" class="required">Exemplo orientador mais próximo da iniciativa</label>
-              <select id="exemploOrientador">
-                <option value="">Selecione o exemplo mais próximo</option>
-                <option value="assistivo">Resumo, revisão textual, apoio à programação, organização de ideias, leitura de literatura aberta ou testes exploratórios sem decisão automatizada.</option>
-                <option value="baixo">Teste com dados públicos ou anonimizados, escopo limitado, sem integração crítica e com revisão humana.</option>
-                <option value="medio">Uso de dados restritos, uso continuado, processamento em lote, integração limitada com sistemas, licenças, API, contratação de menor complexidade ou impacto operacional relevante.</option>
-                <option value="alto">Dados pessoais ou sensíveis, dados sigilosos, contratação relevante, integração crítica, decisão automatizada ou divulgação externa sensível.</option>
-              </select>
-              <div class="hint">Esse campo funciona como referência prática. O enquadramento final continua sendo inferido automaticamente pelo framework com base nas respostas.</div>
-            </div>
-            <div class="field">
-              <label for="tipoInferido">Análise complementar da ficha</label>
-              <input id="tipoInferido" type="text" value="Aguardando preenchimento" readonly>
-              <div class="hint">A classificação de risco principal vem do AIE. A ficha apenas aponta pendências, agravantes ou necessidade de reavaliar o AIE.</div>
-            </div>
-            <div class="field">
-              <label for="decisao">A IA influenciará decisão administrativa, científica ou técnica?</label>
-              <select id="decisao">
-                <option value="nao">Não; apenas apoio e revisão humana</option>
-                <option value="apoio">Sim, como apoio à decisão humana</option>
-                <option value="automatizada">Sim, com decisão automatizada ou semiautomatizada</option>
-              </select>
-            </div>
+            <textarea id="iafara" placeholder="Descreva as tarefas que serão executadas ou apoiadas pela IA."></textarea>
           </div>
 
           <h3>Resultado esperado</h3>
           <div class="checks">
-            <label class="check"><input type="checkbox" class="resultados" value="reduzir tempo"><div><strong>Reduzir tempo</strong><span>Economia de horas ou dias de trabalho.</span></div></label>
-            <label class="check"><input type="checkbox" class="resultados" value="reduzir retrabalho"><div><strong>Reduzir retrabalho</strong><span>Diminuir repetições e inconsistências.</span></div></label>
-            <label class="check"><input type="checkbox" class="resultados" value="melhorar qualidade"><div><strong>Melhorar qualidade</strong><span>Mais precisão, padronização ou revisão.</span></div></label>
-            <label class="check"><input type="checkbox" class="resultados" value="ampliar acesso a dados"><div><strong>Ampliar acesso a dados</strong><span>Facilitar consulta, exploração e análise.</span></div></label>
-            <label class="check"><input type="checkbox" class="resultados" value="apoiar decisão humana"><div><strong>Apoiar decisão humana</strong><span>Sem substituir validação responsável.</span></div></label>
-            <label class="check"><input type="checkbox" class="resultados" value="reduzir inconsistências"><div><strong>Reduzir inconsistências</strong><span>Identificar lacunas, duplicidades e erros.</span></div></label>
+            <label class="check"><input type="checkbox" class="resultados" value="reduzir tempo"><div><strong>Reduzir tempo</strong></div></label>
+            <label class="check"><input type="checkbox" class="resultados" value="reduzir retrabalho"><div><strong>Reduzir retrabalho</strong></div></label>
+            <label class="check"><input type="checkbox" class="resultados" value="melhorar qualidade"><div><strong>Melhorar a qualidade</strong></div></label>
+            <label class="check"><input type="checkbox" class="resultados" value="ampliar acesso a dados"><div><strong>Ampliar o acesso a dados</strong></div></label>
+            <label class="check"><input type="checkbox" class="resultados" value="apoiar decisão humana"><div><strong>Apoiar a decisão humana</strong></div></label>
+          </div>
+          <div class="field">
+            <label for="resultadoOutro">Outro resultado esperado</label>
+            <input id="resultadoOutro" type="text" placeholder="Informe outro resultado, se aplicável">
+          </div>
+
+          <div hidden>
+            <select id="exemploOrientador"><option value=""></option><option value="assistivo">assistivo</option><option value="baixo">baixo</option><option value="medio">medio</option><option value="alto">alto</option></select>
+            <input id="tipoInferido" type="text" value="Aguardando preenchimento">
+            <select id="decisao"><option value="nao">Não</option><option value="apoio">Apoio</option><option value="automatizada">Automatizada</option></select>
           </div>
         </div>
       </section>
 
       <section class="card" id="secDados">
-        <h2>3. Dados utilizados e tratamento previsto</h2>
-        <div class="content">
-          <div class="box warn">
-            <strong>Regra de preenchimento:</strong> descreva o tipo de dado, a fonte e a finalidade. 
-            <strong>Não cole dados sensíveis reais</strong>, como CPF, senhas, chaves de API, documentos sigilosos, informações não públicas ou conteúdo integral restrito.
-          </div>
-
-          <div id="macroSuggestion" class="inline-alert" style="display:none"></div>
-
-          <div class="field">
-            <label for="dadosPrincipais" class="required" title="Descreva apenas o tipo de dado, a fonte e a finalidade. Não cole dados sensíveis reais.">Quais dados serão utilizados?</label>
-            <textarea id="dadosPrincipais" placeholder="Ex.: serão usados artigos científicos e relatórios técnicos públicos. A extração buscará campos relevantes ao projeto, referência, trecho-fonte e página/seção."></textarea>
-            <div class="placeholder-note">O exemplo some quando você começa a digitar. Descreva os dados em linguagem natural, sem inserir o dado sensível em si.</div>
-          </div>
-
-          <div class="row">
-            <div class="field">
-              <label for="dadosEssenciais">Quais dados são essenciais para a iniciativa?</label>
-              <textarea id="dadosEssenciais" placeholder="Ex.: para o piloto, são essenciais os campos necessários ao objetivo, o trecho-fonte e a referência. Dados não necessários devem ser excluídos do processamento."></textarea>
-            </div>
-            <div class="field">
-              <label for="fontes">Qual é a fonte dos dados?</label>
-              <textarea id="fontes" placeholder="Ex.: artigos open access, documentos públicos, bases internas autorizadas ou fontes institucionais definidas para o projeto."></textarea>
-            </div>
-          </div>
-
-          <div class="field">
-            <label for="tratamentoDados">O que será feito com os dados?</label>
-            <textarea id="tratamentoDados" placeholder="Ex.: leitura automatizada em lote, extração para formato estruturado, armazenamento controlado das saídas e validação humana antes de qualquer uso institucional."></textarea>
-          </div>
-
-          <details>
-            <summary>Exemplo de preenchimento adequado</summary>
-            <div class="box ok">
-              <p><strong>Bom exemplo:</strong> serão utilizados documentos públicos ou bases autorizadas, descrevendo apenas o tipo de dado, a fonte e a finalidade do tratamento.</p>
-              <p><strong>Evitar:</strong> colar documentos sigilosos, dados pessoais, senhas, chaves de API ou texto integral de material restrito.</p>
-            </div>
-          </details>
-
-          <h3>Classificação dos dados</h3>
-          <p class="small">Dados pessoais são aproveitados do AIE. Marque dado público apenas quando a fonte usada for aberta/publicada.</p>
-          <div class="checks">
-            <label class="check"><input type="checkbox" id="dPublico" class="dataFlag" data-level="publico"><div><strong>Dado público</strong><span>Informação aberta/publicada, sem restrição.</span></div></label>
-            <label class="check"><input type="checkbox" id="dPessoal" class="dataFlag" data-level="alto"><div><strong>Dado pessoal</strong><span>Informação sobre pessoa natural identificada ou identificável.</span></div></label>
-            <label class="check"><input type="checkbox" id="dPessoalSensivel" class="dataFlag" data-level="alto"><div><strong>Dado pessoal sensível</strong><span>Saúde, biometria, origem racial, opinião política etc.</span></div></label>
-          </div>
-
-          <h3>Envio, upload e exposição externa</h3>
-          <div class="checks">
-            <label class="check"><input type="checkbox" id="uploadExterno"><div><strong>Haverá upload/envio para ferramenta externa</strong><span>Chat, API, SaaS ou provedor externo ao JBRJ.</span></div></label>
-            <label class="check"><input type="checkbox" id="divulgacaoExterna"><div><strong>Haverá divulgação externa sensível</strong><span>Produto público com achado relevante, dado sensível ou impacto institucional.</span></div></label>
-          </div>
-        </div>
-      </section>
-
-      <section class="card mini-card" id="secAssistivoRapido">
-        <h2>Fast path — uso assistivo com dados públicos</h2>
-        <div class="content">
-          <div class="box ok">
-            Este caminho simplificado aparece quando o exemplo orientador é uso assistivo com dados públicos e não há fatores de risco marcados. O resultado é parcial, adequado para uso cotidiano simples.
-          </div>
-          <div class="row">
-            <div class="field">
-              <label for="miniValidador" class="required">Quem validará o resultado?</label>
-              <input id="miniValidador" type="text" placeholder="Ex.: servidor responsável pela minuta, analista da área ou pesquisador responsável.">
-            </div>
-            <div class="field">
-              <label for="miniFerramenta" class="required">Ferramenta usada</label>
-              <input id="miniFerramenta" type="text" placeholder="Ex.: ChatGPT, Copilot, Gemini, ferramenta institucional ou outro.">
-            </div>
-          </div>
-          <div class="checks">
-            <label class="check"><input type="checkbox" id="miniDeclaracao"><div><strong>Declarará uso substancial de IA?</strong><span>Marque quando o produto institucional depender de forma relevante da IA.</span></div></label>
-            <label class="check"><input type="checkbox" id="miniRevisao" checked><div><strong>Haverá revisão humana?</strong><span>Obrigatório para uso institucional.</span></div></label>
-            <label class="check"><input type="checkbox" id="miniSemDadoSensivel" checked><div><strong>Sem dado não público ou sensível</strong><span>Confirma que o uso é com dados públicos ou conteúdo próprio não sensível.</span></div></label>
-          </div>
-        </div>
-      </section>
-
-      <section class="card" id="secFerramenta">
-        <h2>4. Ferramenta, ambiente e integração</h2>
+        <h2>3. Indicadores e registro de uso</h2>
         <div class="content">
           <div class="row">
             <div class="field">
-              <label for="ferramenta">Ferramenta/modelo/provedor</label>
-              <input id="ferramenta" type="text" placeholder="Ex.: ChatGPT, Gemini, NotebookLM, Copilot, modelo próprio, a definir">
-            </div>
-            <div class="field">
-              <label for="tipoSolucao">Tipo de solução</label>
-              <select id="tipoSolucao">
-                <option value="">Selecione</option>
-                <option>IA generativa externa</option>
-                <option>API externa</option>
-                <option>Modelo próprio</option>
-                <option>Ferramenta institucional</option>
-                <option>Ferramenta open-source local</option>
-                <option>A definir</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="row">
-            <div class="field">
-              <label for="ambiente">Local de processamento</label>
-              <select id="ambiente">
-                <option value="">Selecione</option>
-                <option>Ambiente JBRJ</option>
-                <option>Nuvem governamental</option>
-                <option>Nuvem privada</option>
-                <option>Provedor externo</option>
-                <option>A definir</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="frequencia">Uso previsto</label>
-              <select id="frequencia">
-                <option value="pontual">Pontual / teste exploratório</option>
-                <option value="piloto">Piloto controlado</option>
-                <option value="continuado">Uso continuado em processo interno</option>
-                <option value="institucional">Institucionalização / escala</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="checks">
-            <label class="check"><input type="checkbox" id="contratacao"><div><strong>Haverá contratação ou instrumento formal</strong><span>Contrato, ACT, termo, aquisição ou fornecedor.</span></div></label>
-            <label class="check"><input type="checkbox" id="integracao"><div><strong>Haverá integração com sistema institucional</strong><span>SEI, base interna, API, banco de dados, login institucional.</span></div></label>
-            <label class="check"><input type="checkbox" id="integracaoCritica"><div><strong>Integração crítica ou privilegiada</strong><span>Acesso amplo, credenciais, escrita em base, operação sensível.</span></div></label>
-          </div>
-        </div>
-      </section>
-
-      <section class="card" id="secSupervisao">
-        <h2>5. Supervisão humana, controles e indicadores</h2>
-        <div class="content">
-          <div class="row">
-            <div class="field">
-              <label for="validador">Responsável pela validação humana</label>
-              <input id="validador" type="text" placeholder="Ex.: analista do CNCFlora responsável pela avaliação da espécie; pesquisador especialista; gestor da área.">
-            </div>
-            <div class="field">
-              <label for="indicador">Indicador mínimo de resultado</label>
+              <label for="indicador">Indicador de resultado</label>
               <select id="indicador">
                 <option value="">Selecione</option>
                 <option>Tempo economizado</option>
-                <option>Qualidade / precisão</option>
+                <option>Qualidade</option>
                 <option>Redução de retrabalho</option>
                 <option>Acesso a dados</option>
                 <option>Redução de inconsistências</option>
                 <option>Outro</option>
               </select>
             </div>
+            <div class="field">
+              <label for="indicadorOutro">Outro indicador, se aplicável</label>
+              <input id="indicadorOutro" type="text" placeholder="Informe o indicador">
+            </div>
           </div>
-
           <div class="field">
             <label for="medicao">Como será medido?</label>
-            <textarea id="medicao" placeholder="Ex.: medir tempo por artigo antes/depois, taxa de correção humana, número de campos extraídos corretamente e inconsistências identificadas."></textarea>
+            <textarea id="medicao" placeholder="Ex.: comparar o tempo médio antes e depois do uso e registrar a taxa de correção humana."></textarea>
           </div>
-
-          <h3>Controles previstos</h3>
-          <div class="checks">
-            <label class="check"><input type="checkbox" id="ctrlRevisao"><div><strong>Revisão humana</strong><span>Resultado não será usado sem validação.</span></div></label>
-            <label class="check"><input type="checkbox" id="ctrlFontes"><div><strong>Verificação de fontes</strong><span>Checagem de evidências e referências.</span></div></label>
-            <label class="check"><input type="checkbox" id="ctrlAnon"><div><strong>Anonimização/agregação/mascaramento</strong><span>Proteção antes de tratamento por IA.</span></div></label>
-            <label class="check"><input type="checkbox" id="ctrlLGPD"><div><strong>Orientação LGPD</strong><span>Consulta ao Encarregado quando aplicável.</span></div></label>
-            <label class="check"><input type="checkbox" id="ctrlCTIC"><div><strong>Orientação CTIC/Segurança</strong><span>Infraestrutura, acesso, logs, integração.</span></div></label>
-            <label class="check"><input type="checkbox" id="ctrlDeclaracao"><div><strong>Declaração de uso de IA</strong><span>Registro de uso substancial em produto institucional.</span></div></label>
-          </div>
-        </div>
-      </section>
-
-      <section class="card" id="secPontuacao">
-        <h2>6. Pontuação orientativa dos critérios</h2>
-        <div class="content">
-          <p class="muted">Pontuação total sugerida: até 16 pontos. A pontuação ajuda a comparar iniciativas, mas não substitui análise técnica, científica, jurídica, orçamentária ou de segurança quando necessária.</p>
-
-          <table>
-            <thead>
-              <tr>
-                <th>Critério</th>
-                <th>Pergunta orientadora</th>
-                <th>Pontuação</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><strong>Aderência institucional</strong></td>
-                <td>A iniciativa contribui diretamente para pesquisa, ensino, conservação, gestão de dados, atendimento ao público ou administração do JBRJ?</td>
-                <td>
-                  <select id="sAderencia" class="score-select score3">
-                    <option value="0">0 - não atende</option>
-                    <option value="1">1 - baixa</option>
-                    <option value="2">2 - média</option>
-                    <option value="3">3 - alta</option>
-                  </select>
-                  <span id="sAderenciaHint" class="score-suggestion"></span>
-                </td>
-              </tr>
-              <tr>
-                <td><strong>Impacto esperado</strong></td>
-                <td>A iniciativa reduz tempo, melhora qualidade, amplia acesso a dados, aumenta transparência ou reduz retrabalho?</td>
-                <td>
-                  <select id="sImpacto" class="score-select score3">
-                    <option value="0">0 - não identificado</option>
-                    <option value="1">1 - baixo</option>
-                    <option value="2">2 - médio</option>
-                    <option value="3">3 - alto</option>
-                  </select>
-                  <span id="sImpactoHint" class="score-suggestion"></span>
-                </td>
-              </tr>
-              <tr>
-                <td><strong>Viabilidade</strong></td>
-                <td>Há dados, equipe responsável, ferramenta e infraestrutura mínima para iniciar?</td>
-                <td>
-                  <select id="sViabilidade" class="score-select score3">
-                    <option value="0">0 - inviável</option>
-                    <option value="1">1 - baixa</option>
-                    <option value="2">2 - parcial</option>
-                    <option value="3">3 - viável</option>
-                  </select>
-                  <span id="sViabilidadeHint" class="score-suggestion"></span>
-                </td>
-              </tr>
-              <tr>
-                <td><strong>Risco controlável</strong></td>
-                <td>Os riscos jurídicos, éticos, cibernéticos, científicos e de dados podem ser mitigados com controles simples?</td>
-                <td>
-                  <select id="sRisco" class="score-select score3">
-                    <option value="0">0 - alto não mitigado</option>
-                    <option value="1">1 - controles incertos</option>
-                    <option value="2">2 - mitigável</option>
-                    <option value="3">3 - baixo/controlável</option>
-                  </select>
-                  <span id="sRiscoHint" class="score-suggestion"></span>
-                </td>
-              </tr>
-              <tr>
-                <td><strong>Reutilização</strong></td>
-                <td>A solução pode ser reaproveitada por mais de uma área do JBRJ?</td>
-                <td>
-                  <select id="sReuso" class="score-select score2">
-                    <option value="0">0 - isolado</option>
-                    <option value="1">1 - parcial</option>
-                    <option value="2">2 - transversal</option>
-                  </select>
-                  <span id="sReusoHint" class="score-suggestion"></span>
-                </td>
-              </tr>
-              <tr>
-                <td><strong>Custo proporcional</strong></td>
-                <td>O custo é compatível com o benefício esperado, a maturidade da iniciativa e a disponibilidade institucional?</td>
-                <td>
-                  <select id="sCusto" class="score-select score2">
-                    <option value="0">0 - desproporcional</option>
-                    <option value="1">1 - a avaliar</option>
-                    <option value="2">2 - proporcional</option>
-                  </select>
-                  <span id="sCustoHint" class="score-suggestion"></span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
 
           <div class="field">
-            <label for="obsAvaliador">Observações do avaliador</label>
-            <textarea id="obsAvaliador" placeholder="Ex.: justificar pontuação, registrar dúvida sobre classificação dos dados, indicar necessidade de consulta à CTIC, Segurança, Encarregado LGPD ou gestor da área."></textarea>
+            <label>Haverá produto institucional com uso substancial de IA?</label>
+            <div class="checks">
+              <label class="check"><input id="produtoInstitucionalNao" type="radio" name="produtoInstitucionalIA" value="nao" checked><div><strong>Não</strong></div></label>
+              <label class="check"><input id="produtoInstitucionalSim" type="radio" name="produtoInstitucionalIA" value="sim"><div><strong>Sim</strong></div></label>
+            </div>
+          </div>
+          <div class="field" id="campoDeclaracaoUsoIA" style="display:none">
+            <label for="declaracaoUsoIA">Como o uso será declarado?</label>
+            <textarea id="declaracaoUsoIA" placeholder="Descreva como o uso substancial de IA será registrado ou declarado no produto institucional."></textarea>
           </div>
 
-          <details>
-            <summary>Como interpretar a pontuação</summary>
-            <div class="box">
-              <p><strong>12 a 16 pontos:</strong> iniciativa com boa aderência, impacto e viabilidade. Priorizar como piloto, desde que não haja fator de alto risco.</p>
-              <p><strong>8 a 11 pontos:</strong> iniciativa promissora, mas com lacunas de escopo, equipe, infraestrutura ou risco. Ajustar escopo, buscar orientação técnica e reavaliar antes da execução.</p>
-              <p><strong>0 a 7 pontos:</strong> iniciativa pouco madura ou com benefício insuficientemente demonstrado. Não priorizar no ciclo inicial; manter como ideia ou proposta futura.</p>
-            </div>
-          </details>
+          <div id="macroSuggestion" hidden></div>
+          <div hidden>
+            <textarea id="dadosPrincipais"></textarea><textarea id="dadosEssenciais"></textarea><textarea id="fontes"></textarea><textarea id="tratamentoDados"></textarea>
+            <input type="checkbox" id="dPublico" class="dataFlag"><input type="checkbox" id="dPessoal" class="dataFlag"><input type="checkbox" id="dPessoalSensivel" class="dataFlag">
+            <input type="checkbox" id="uploadExterno"><input type="checkbox" id="divulgacaoExterna">
+          </div>
         </div>
       </section>
+
+      <section id="secAssistivoRapido" hidden>
+        <input id="miniValidador" type="text"><input id="miniFerramenta" type="text">
+        <input type="checkbox" id="miniDeclaracao"><input type="checkbox" id="miniRevisao" checked><input type="checkbox" id="miniSemDadoSensivel" checked>
+      </section>
+
+      <section id="secFerramenta" hidden>
+        <input id="ferramenta" type="text">
+        <select id="tipoSolucao"><option value=""></option><option>IA generativa externa</option><option>API externa</option><option>Modelo próprio</option><option>Ferramenta institucional</option><option>Ferramenta open-source local</option><option>A definir</option></select>
+        <select id="ambiente"><option value=""></option><option>Ambiente JBRJ</option><option>Nuvem governamental</option><option>Nuvem privada</option><option>Provedor externo</option><option>A definir</option></select>
+        <select id="frequencia"><option value="pontual">Pontual</option><option value="piloto">Piloto</option><option value="continuado">Continuado</option><option value="institucional">Institucional</option></select>
+        <input type="checkbox" id="contratacao"><input type="checkbox" id="integracao"><input type="checkbox" id="integracaoCritica">
+      </section>
+
+      <section class="card" id="secSupervisao">
+        <h2>4. Ciência e validação</h2>
+        <div class="content">
+          <div class="row">
+            <div class="field">
+              <label for="validador">Responsável pela iniciativa — nome</label>
+              <input id="validador" type="text" placeholder="Nome do responsável pela iniciativa">
+            </div>
+            <div class="field">
+              <label for="dataResponsavel">Data</label>
+              <input id="dataResponsavel" type="date">
+            </div>
+          </div>
+          <div class="row">
+            <div class="field">
+              <label for="gestorArea">Gestor da área, quando aplicável — nome</label>
+              <input id="gestorArea" type="text" placeholder="Nome do gestor da área">
+            </div>
+            <div class="field">
+              <label for="dataGestorArea">Data</label>
+              <input id="dataGestorArea" type="date">
+            </div>
+          </div>
+          <div class="row">
+            <div class="field">
+              <label for="orientacaoArea">Orientação técnica ou manifestação prévia, quando aplicável — área ou instância</label>
+              <input id="orientacaoArea" type="text" placeholder="Ex.: CTIC, Segurança da Informação, Encarregado ou outra instância">
+            </div>
+            <div class="field">
+              <label for="dataOrientacao">Data</label>
+              <input id="dataOrientacao" type="date">
+            </div>
+          </div>
+
+          <div hidden>
+            <input type="checkbox" id="ctrlRevisao"><input type="checkbox" id="ctrlFontes"><input type="checkbox" id="ctrlAnon"><input type="checkbox" id="ctrlLGPD"><input type="checkbox" id="ctrlCTIC"><input type="checkbox" id="ctrlDeclaracao">
+          </div>
+        </div>
+      </section>
+
     </main>
 
     <aside class="card post-aie-only" id="painelResultado">
@@ -1135,6 +1264,19 @@
         <div id="resultado" class="result">
           <h3>Preencha os campos para gerar a triagem.</h3>
           <p class="small">O resultado será recalculado automaticamente.</p>
+        </div>
+
+        <div class="box ok" id="relatorioSEIBox">
+          <strong>Relatório para instrução do processo SEI</strong>
+          <p class="small">Consolida automaticamente o AIE, a Ficha JBRJ, a classificação final, os fatores identificados, os controles recomendados e o encaminhamento institucional.</p>
+          <div class="buttons">
+            <button type="button" onclick="extrairRelatorioSEI('pdf')">Gerar PDF para o SEI</button>
+            <button type="button" class="secondary" onclick="extrairRelatorioSEI('copiar')">Copiar relatório completo</button>
+            <button type="button" class="light" onclick="extrairRelatorioSEI('resumo')">Copiar resumo executivo</button>
+            <button type="button" class="light" onclick="extrairRelatorioSEI('txt')">Baixar relatório em TXT</button>
+            <button type="button" class="light" onclick="extrairRelatorioSEI('json')">Baixar dados em JSON</button>
+          </div>
+          <p class="small">O PDF é a versão recomendada para anexação ao processo. Revise o conteúdo antes da assinatura ou inclusão no SEI.</p>
         </div>
 
         <div id="camposMinimos" class="box">
@@ -1148,13 +1290,13 @@
         </div>
 
         <div class="buttons">
-          <button type="button" onclick="gerarRelatorio()">Gerar relatório</button>
+          <button type="button" onclick="gerarRelatorio()">Atualizar prévia do relatório</button>
           <button type="button" class="secondary" onclick="copiarRelatorio()">Copiar completo</button>
           <button type="button" class="light" onclick="gerarResumoSEI()">Gerar resumo SEI</button>
           <button type="button" class="light" onclick="copiarResumoSEI()">Copiar resumo SEI</button>
           <button type="button" class="light" onclick="baixarTXT()">Baixar TXT</button>
           <button type="button" class="light" onclick="baixarJSON()">Baixar JSON</button>
-          <button type="button" class="light" onclick="baixarPDFRelatorio()">Baixar PDF visual</button>
+          <button type="button" class="light" onclick="extrairRelatorioSEI('pdf')">Gerar PDF para o SEI</button>
           <button type="button" class="danger" onclick="limparTudo()">Limpar</button>
         </div>
 
@@ -1165,11 +1307,24 @@
         <pre id="relatorio">Nenhum relatório gerado ainda.</pre>
 
         <details id="historicoBox">
-          <summary>Projetos desta sessão</summary>
-          <div id="historicoProjetos" class="small">Nenhum projeto registrado nesta sessão.</div>
+          <summary>Iniciativas/Usos desta sessão</summary>
+          <div id="historicoProjetos" class="small">Nenhuma iniciativa/uso registrado nesta sessão.</div>
         </details>
       </div>
     </aside>
+  </div>
+
+  <div id="toastStack" class="toast-stack" aria-live="polite" aria-atomic="true"></div>
+
+  <div id="confirmModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle" aria-hidden="true">
+    <div class="modal">
+      <h3 id="confirmModalTitle">Confirmar ação</h3>
+      <p id="confirmModalText"></p>
+      <div class="modal-actions">
+        <button type="button" class="light" id="confirmModalCancel">Cancelar</button>
+        <button type="button" class="danger" id="confirmModalOk">Confirmar</button>
+      </div>
+    </div>
   </div>
 
   <div class="footer">
@@ -1184,6 +1339,55 @@
   let editandoAIE = false;
   let aiePrefillApplied = false;
   let aiePrincipalUltimoNivel = "";
+  let confirmModalCallback = null;
+
+  function mostrarToast(message, type = "ok") {
+    const stack = $("toastStack");
+    if (!stack) return;
+    const toast = document.createElement("div");
+    toast.className = "toast" + (type === "error" ? " error" : "");
+    toast.textContent = message;
+    stack.appendChild(toast);
+    setTimeout(() => {
+      toast.style.opacity = "0";
+      toast.style.transform = "translateY(8px)";
+      setTimeout(() => toast.remove(), 180);
+    }, 3400);
+  }
+
+  function abrirConfirmacao({ title = "Confirmar ação", message, okText = "Confirmar", danger = false, onConfirm }) {
+    const modal = $("confirmModal");
+    if (!modal) return;
+    confirmModalCallback = typeof onConfirm === "function" ? onConfirm : null;
+    $("confirmModalTitle").textContent = title;
+    $("confirmModalText").textContent = message || "";
+    const ok = $("confirmModalOk");
+    ok.textContent = okText;
+    ok.className = danger ? "danger" : "";
+    modal.classList.add("open");
+    modal.setAttribute("aria-hidden", "false");
+    $("confirmModalCancel").focus();
+  }
+
+  function fecharConfirmacao() {
+    const modal = $("confirmModal");
+    if (!modal) return;
+    modal.classList.remove("open");
+    modal.setAttribute("aria-hidden", "true");
+    confirmModalCallback = null;
+  }
+
+  function iconeRisco(level) {
+    if (String(level || "").includes("Excessivo")) return "⛔";
+    if (String(level || "").includes("Alto")) return "✕";
+    if (String(level || "").includes("Médio") || String(level || "").includes("médio")) return "⚠";
+    if (String(level || "").includes("Baixo") || String(level || "").includes("baixo")) return "✓";
+    return "•";
+  }
+
+  function labelRiscoComIcone(level) {
+    return `<span class="risk-icon" aria-hidden="true">${escapeHtml(iconeRisco(level))}</span>${escapeHtml(level || "Não classificado")}`;
+  }
 
   // Configuração original completa do AIE 2.40 incorporada à ferramenta JBRJ.
   const AIE_FULL_CONFIG = {
@@ -1226,7 +1430,7 @@
         preTriagem: [
             {
                 id: "PT_Q1_NOME_PROJETO",
-                text: "1. Nome do Projeto/Solução/Ferramenta de IA:",
+                text: "1. Nome da Iniciativa/Uso/Solução/Ferramenta de IA:",
                 type: "text_input",
                 weight: 0,
                 atores: ["Gestor de Negócio/Cliente", "Analista de Negócio"]
@@ -1651,7 +1855,7 @@
                 ]
             },
             {
-                section_id: "M_GOV", section_title: "Governança do Projeto de IA", isCritical: false,
+                section_id: "M_GOV", section_title: "Governança da Iniciativa/Uso de IA", isCritical: false,
                 questions: [
                     {
                 id: "A.16_ESTRUTURA_GOVERNANCA_DE_DADOS", text: "M.16 - Existe uma estrutura formal de governança de dados, com papéis e responsabilidades claramente definidos, para gerenciar e garantir a qualidade, a segurança, o uso ético e a conformidade legal no uso dos dados que serão utilizados no sistema de IA?", type: "radio",
@@ -1679,14 +1883,14 @@
                     { value: "sim_pessoa", text: "Sim, existe uma pessoa/ponto focal designado.", score: 0.5, recommendation_if_chosen_and_suboptimal: "Considere evoluir de um ponto focal para um comitê multidisciplinar para enriquecer a supervisão ética." },
                     { value: "sim_fora_orgao", text: "Sim, mas a estrutura de governança está fora do órgão.", score: 2, recommendation_if_chosen_and_suboptimal: "Avaliar a necessidade de criar um ponto focal ou comitê interno para complementar a governança externa." },
                     { value: "discussoes", text: "Não, mas há discussões em andamento.", score: 0, recommendation_if_chosen_and_suboptimal: "Formalize as discussões e designe um responsável ou crie um grupo de trabalho para a governança de IA." },
-                    { value: "nao", text: "Não.", score: -1, reason_if_negative: "Ausência de governança formal para os aspectos éticos do projeto, um ponto crítico para Solução/Ferramenta de alto risco.", recommendation_if_chosen_and_suboptimal: "É fundamental designar formalmente um responsável ou um comitê para a supervisão ética de projetos de IA." }
+                    { value: "nao", text: "Não.", score: -1, reason_if_negative: "Ausência de governança formal para os aspectos éticos da iniciativa/uso, um ponto crítico para Solução/Ferramenta de alto risco.", recommendation_if_chosen_and_suboptimal: "É fundamental designar formalmente um responsável ou um comitê para a supervisão ética de iniciativas/usos de IA." }
                 ], weight: 1, critical_flag_if_negative_score: true, requiresJustification: false, atores: ["Gestor do Órgão"]
             },
             {
                 id: "M.19_POLITICAS_INTERNAS", text: "M.19 - O órgão possui diretrizes ou políticas internas para o uso responsável de IA, incluindo a contratação de serviços de IA de terceiros?", type: "radio",
                 options: [
                     { value: "sim", text: "Sim, formalmente aprovadas e divulgadas.", score: 2, best_practice_description: "Manter políticas de IA atualizadas e garantir que sejam conhecidas e seguidas por todas as equipes relevantes." },
-                    { value: "elaboracao", text: "Em fase de elaboração/discussão.", score: 1, recommendation_if_chosen_and_suboptimal: "Priorize a finalização, aprovação e divulgação das políticas de IA para orientar os projetos." },
+                    { value: "elaboracao", text: "Em fase de elaboração/discussão.", score: 1, recommendation_if_chosen_and_suboptimal: "Priorize a finalização, aprovação e divulgação das políticas de IA para orientar as iniciativas/usos." },
                     { value: "nao", text: "Não.", score: 0, reason_if_negative: "A falta de diretrizes internas gera insegurança e inconsistência no uso de IA.", recommendation_if_chosen_and_suboptimal: "Desenvolver diretrizes ou uma política interna para o uso responsável de IA é um passo crucial." }
                 ], weight: 1, critical_flag_if_negative_score: false, atores: ["Gestor do Órgão"]
             },
@@ -1709,7 +1913,7 @@
                 options: [
                     { value: "sim_analise_conformidade_abrangente_realizada_sistema_atende_todos_normativos_aplicaveis_identificados", text: "Sim, uma análise de conformidade abrangente foi realizada e a Solução/Ferramenta atende a todos os normativos aplicáveis identificados.", score: 2, best_practice_description: "Manter uma análise de conformidade contínua e documentada com todas as legislações e normas aplicáveis, atualizando-a conforme surgem novas regulamentações." },
                     { value: "analise_conformidade_parcial_realizada_algumas_adequacoes_podem_ser_necessarias", text: "Uma análise de conformidade parcial foi realizada, e algumas adequações podem ser necessárias para atender a todos os requisitos.", score: 1, recommendation_if_chosen_and_suboptimal: "Concluir a análise de conformidade com todas as leis e normas relevantes e implementar as adequações necessárias com urgência." },
-                    { value: "analise_conformidade_outros_normativos_ainda_nao_realizada", text: "A análise de conformidade com outros normativos ainda não foi realizada ou é insuficiente.", score: 0, reason_if_negative: "Análise de conformidade com outras legislações/normas (além da LGPD) não realizada ou insuficiente, expondo o projeto a riscos legais.", recommendation_if_chosen_and_suboptimal: "Realizar urgentemente uma análise de conformidade abrangente com todas as leis e normas pertinentes à Solução/Ferramenta e seu contexto de uso." }
+                    { value: "analise_conformidade_outros_normativos_ainda_nao_realizada", text: "A análise de conformidade com outros normativos ainda não foi realizada ou é insuficiente.", score: 0, reason_if_negative: "Análise de conformidade com outras legislações/normas (além da LGPD) não realizada ou insuficiente, expondo a iniciativa/uso a riscos legais.", recommendation_if_chosen_and_suboptimal: "Realizar urgentemente uma análise de conformidade abrangente com todas as leis e normas pertinentes à Solução/Ferramenta e seu contexto de uso." }
                 ], weight: 1, critical_flag_if_negative_score: false, requiresJustification: false, atores: ["Desenvolvedor/Cientista de Dados"]
                     },
                 ]
@@ -1747,7 +1951,7 @@
                         options: [
                             { value: "sim_aceitavel_gerenciavel", text: "Sim, o risco residual é considerado aceitável e gerenciável.", score: 3, best_practice_description: "Documentar a análise de risco residual e a justificativa para sua aceitabilidade." },
                             { value: "parcialmente_alguns_riscos_preocupam_monitoramento_intensivo", text: "Parcialmente, alguns riscos residuais ainda geram preocupação e exigirão monitoramento intensivo.", score: 1, recommendation_if_chosen_and_suboptimal: "Revisar as medidas de mitigação para os riscos que ainda geram preocupação e fortalecer o monitoramento." },
-                            { value: "nao_risco_residual_alto_revisoes_necessarias", text: "Não, o risco residual ainda é considerado alto e necessita de revisões/garantias adicionais.", score: -2, reason_if_negative: "Risco residual da Solução/Ferramenta considerado inaceitável ou preocupante pela equipe.", recommendation_if_chosen_and_suboptimal: "Revisar urgentemente o projeto e as medidas de mitigação para reduzir o risco residual a um nível aceitável." }
+                            { value: "nao_risco_residual_alto_revisoes_necessarias", text: "Não, o risco residual ainda é considerado alto e necessita de revisões/garantias adicionais.", score: -2, reason_if_negative: "Risco residual da Solução/Ferramenta considerado inaceitável ou preocupante pela equipe.", recommendation_if_chosen_and_suboptimal: "Revisar urgentemente a iniciativa/uso e as medidas de mitigação para reduzir o risco residual a um nível aceitável." }
                         ], weight: 2, critical_flag_if_negative_score: true, requiresJustification: false, atores: ["Gestor de Negócio/Cliente", "Especialista em Ética/Risco de IA"]
                     }
                 ]
@@ -2023,7 +2227,7 @@
             {
                 id: "A.26_IMPACTO_AMBIENTAL_IA", text: "A.26 - Como as implicações de sustentabilidade ambiental (ex., consumo de energia, eficiência de hardware) são tratadas no ciclo de vida da Solução/Ferramenta de IA?", type: "radio",
                 options: [
-                    { value: "sustentabilidade_ambiental_é_um_critério_formal", text: "A sustentabilidade ambiental é um critério formal no projeto e operação da Solução/Ferramenta. O impacto é avaliado e monitorado, com metas documentadas para a otimização contínua da eficiência energética.", score: 1.5 },
+                    { value: "sustentabilidade_ambiental_é_um_critério_formal", text: "A sustentabilidade ambiental é um critério formal na iniciativa/uso e na operação da Solução/Ferramenta. O impacto é avaliado e monitorado, com metas documentadas para a otimização contínua da eficiência energética.", score: 1.5 },
                     { value: "monitorados_ativamente_como_métricas_de_desempenho", text: "O consumo de energia e a eficiência dos recursos são monitorados ativamente como métricas de desempenho. Existem estratégias para otimizar a infraestrutura e os algoritmos, embora sem um relatório de sustentabilidade formal.", score: 1 },
                     { value: "Não_há_uma_avaliação_formal_de_impacto_ambiental", text: "Não há uma avaliação formal de impacto ambiental, mas são aplicadas práticas de engenharia para otimizar a eficiência da infraestrutura, como o dimensionamento de recursos computacionais de acordo com a demanda.", score: 0.5, recommendation_if_chosen_and_suboptimal: "Aprofundar a análise do impacto ambiental e identificar estratégias para otimizar a eficiência energética." },
                     { value: "impacto_ambiental_do_sistema_não_é_uma_preocupação_avaliada", text: "O impacto ambiental da Solução/Ferramenta não é uma preocupação avaliada, e não existem estratégias para otimizar a eficiência energética.", score: 0, best_practice_description: "Avaliar e monitorar o impacto ambiental da IA, implementando medidas para otimizar a eficiência energética e o uso de recursos." }
@@ -2064,7 +2268,7 @@
         ]
     },
     {
-        section_id: "A_GOV_PROJETO", section_title: "Governança do Projeto de IA", isCritical: false,
+        section_id: "A_GOV_PROJETO", section_title: "Governança da Iniciativa/Uso de IA", isCritical: false,
         questions: [
              {
                 id: "A.30_ESTRUTURA_GOVERNANCA_DE_DADOS", text: "A.30 - Existe uma estrutura formal de governança de dados, com papéis e responsabilidades claramente definidos, para gerenciar e garantir a qualidade, a segurança, o uso ético e a conformidade legal no uso dos dados que serão utilizados no sistema de IA?", type: "radio",
@@ -2091,14 +2295,14 @@
                     { value: "sim_pessoa", text: "Sim, existe uma pessoa/ponto focal designado.", score: 2, recommendation_if_chosen_and_suboptimal: "Considere evoluir de um ponto focal para um comitê multidisciplinar para enriquecer a supervisão ética." },
                     { value: "sim_fora_orgao", text: "Sim, mas a estrutura de governança está fora do órgão.", score: 1, recommendation_if_chosen_and_suboptimal: "Avaliar a necessidade de criar um ponto focal ou comitê interno para complementar a governança externa." },
                     { value: "discussoes", text: "Não, mas há discussões em andamento.", score: 1, recommendation_if_chosen_and_suboptimal: "Formalize as discussões e designe um responsável ou crie um grupo de trabalho para a governança de IA." },
-                    { value: "nao", text: "Não.", score: -2, reason_if_negative: "Ausência de governança formal para os aspectos éticos do projeto, um ponto crítico para Solução/Ferramenta de alto risco.", recommendation_if_chosen_and_suboptimal: "É fundamental designar formalmente um responsável ou um comitê para a supervisão ética de projetos de IA." }
+                    { value: "nao", text: "Não.", score: -2, reason_if_negative: "Ausência de governança formal para os aspectos éticos da iniciativa/uso, um ponto crítico para Solução/Ferramenta de alto risco.", recommendation_if_chosen_and_suboptimal: "É fundamental designar formalmente um responsável ou um comitê para a supervisão ética de iniciativas/usos de IA." }
                 ], weight: 2, critical_flag_if_negative_score: true, requiresJustification: false, atores: ["Gestor do Órgão"]
             },
             {
                 id: "A.33_POLITICAS_INTERNAS", text: "A.33 - O órgão possui diretrizes ou políticas internas para o uso responsável de IA, incluindo a contratação de serviços de IA de terceiros?", type: "radio",
                 options: [
                     { value: "sim", text: "Sim, formalmente aprovadas e divulgadas.", score: 2, best_practice_description: "Manter políticas de IA atualizadas e garantir que sejam conhecidas e seguidas por todas as equipes relevantes." },
-                    { value: "elaboracao", text: "Sim, em fase de elaboração/discussão.", score: 1, recommendation_if_chosen_and_suboptimal: "Priorize a finalização, aprovação e divulgação das políticas de IA para orientar os projetos." },
+                    { value: "elaboracao", text: "Sim, em fase de elaboração/discussão.", score: 1, recommendation_if_chosen_and_suboptimal: "Priorize a finalização, aprovação e divulgação das políticas de IA para orientar as iniciativas/usos." },
                     { value: "nao", text: "Não.", score: -1, reason_if_negative: "A falta de diretrizes internas gera insegurança e inconsistência no uso de IA.", recommendation_if_chosen_and_suboptimal: "Desenvolver diretrizes ou uma política interna para o uso responsável de IA é um passo crucial." }
                 ], weight: 1, critical_flag_if_negative_score: true, atores: ["Gestor do Órgão"]
             },
@@ -2130,7 +2334,7 @@
                 options: [
                     { value: "sim_analise_conformidade_abrangente_realizada_sistema_atende_todos_normativos_aplicaveis_identificados", text: "Sim, uma análise de conformidade abrangente foi realizada e a Solução/Ferramenta atende a todos os normativos aplicáveis identificados.", score: 2, best_practice_description: "Manter uma análise de conformidade contínua e documentada com todas as legislações e normas aplicáveis, atualizando-a conforme surgem novas regulamentações." },
                     { value: "analise_conformidade_parcial_realizada_algumas_adequacoes_podem_ser_necessarias", text: "Uma análise de conformidade parcial foi realizada, e algumas adequações podem ser necessárias para atender a todos os requisitos.", score: 0, recommendation_if_chosen_and_suboptimal: "Concluir a análise de conformidade com todas as leis e normas relevantes e implementar as adequações necessárias com urgência." },
-                    { value: "analise_conformidade_outros_normativos_ainda_nao_realizada", text: "A análise de conformidade com outros normativos ainda não foi realizada ou é insuficiente.", score: -1, reason_if_negative: "Análise de conformidade com outras legislações/normas (além da LGPD) não realizada ou insuficiente, expondo o projeto a riscos legais.", recommendation_if_chosen_and_suboptimal: "Realizar urgentemente uma análise de conformidade abrangente com todas as leis e normas pertinentes à Solução/Ferramenta e seu contexto de uso." }
+                    { value: "analise_conformidade_outros_normativos_ainda_nao_realizada", text: "A análise de conformidade com outros normativos ainda não foi realizada ou é insuficiente.", score: -1, reason_if_negative: "Análise de conformidade com outras legislações/normas (além da LGPD) não realizada ou insuficiente, expondo a iniciativa/uso a riscos legais.", recommendation_if_chosen_and_suboptimal: "Realizar urgentemente uma análise de conformidade abrangente com todas as leis e normas pertinentes à Solução/Ferramenta e seu contexto de uso." }
                 ], weight: 1.5, critical_flag_if_negative_score: false, requiresJustification: false, atores: ["Desenvolvedor/Cientista de Dados"]
             },
         ]
@@ -2147,11 +2351,11 @@
                 ], weight: 0.5, requiresJustification: false, atores: ["Desenvolvedor/Cientista de Dados"]
             },
             {
-                id: "A.38_TESTES_PRE_IMPLANTACAO_AMBIENTE_CONTROLADO_PILOTO", text: "A.38 - Foram realizados testes da Solução/Ferramenta de IA em um ambiente controlado ou em um projeto piloto antes da implementação em larga escala? Quais foram os principais aprendizados e ajustes realizados?", type: "radio",
+                id: "A.38_TESTES_PRE_IMPLANTACAO_AMBIENTE_CONTROLADO_PILOTO", text: "A.38 - Foram realizados testes da Solução/Ferramenta de IA em ambiente controlado ou em uma iniciativa piloto antes da implementação em larga escala? Quais foram os principais aprendizados e ajustes realizados?", type: "radio",
                 options: [
-                    { value: "sim_testes_ambiente_controlado_piloto_realizados_licoes_aprendidas_incorporadas", text: "Sim, testes em ambiente controlado e/ou piloto foram realizados, e as lições aprendidas foram incorporadas para aprimorar a Solução/Ferramenta.", score: 1, best_practice_description: "Realizar testes em ambiente controlado e projetos piloto antes da implementação em larga escala, incorporando os aprendizados." },
+                    { value: "sim_testes_ambiente_controlado_piloto_realizados_licoes_aprendidas_incorporadas", text: "Sim, testes em ambiente controlado e/ou piloto foram realizados, e as lições aprendidas foram incorporadas para aprimorar a Solução/Ferramenta.", score: 1, best_practice_description: "Realizar testes em ambiente controlado e iniciativas piloto antes da implementação em larga escala, incorporando os aprendizados." },
                     { value: "testes_planejados_mas_nao_executados", text: "Testes em ambiente controlado ou piloto estão planejados, mas ainda não foram executados.", score: 0, recommendation_if_chosen_and_suboptimal: "Executar os testes planejados em ambiente controlado ou piloto antes de prosseguir para a implementação em larga escala." },
-                    { value: "nao_foram_realizados_testes_ambiente_controlado_piloto", text: "Não foram realizados testes em ambiente controlado ou piloto antes da decisão de implementação em larga escala.", score: -1, reason_if_negative: "Ausência de testes em ambiente controlado/piloto antes da implementação em larga escala, aumentando o risco de falhas e impactos negativos.", recommendation_if_chosen_and_suboptimal: "Considerar a realização de testes em ambiente controlado ou um projeto piloto, mesmo que a implementação já tenha iniciado, para identificar e mitigar riscos." }
+                    { value: "nao_foram_realizados_testes_ambiente_controlado_piloto", text: "Não foram realizados testes em ambiente controlado ou piloto antes da decisão de implementação em larga escala.", score: -1, reason_if_negative: "Ausência de testes em ambiente controlado/piloto antes da implementação em larga escala, aumentando o risco de falhas e impactos negativos.", recommendation_if_chosen_and_suboptimal: "Considerar a realização de testes em ambiente controlado ou uma iniciativa piloto, mesmo que a implementação já tenha iniciado, para identificar e mitigar riscos." }
                 ], weight: 1, requiresJustification: false, atores: ["Desenvolvedor/Cientista de Dados"]
             },
             {
@@ -2179,11 +2383,11 @@
             { id: "A.42_ESTRATEGIAS_MITIGACAO", text: "A.42 - Para cada risco principal listado acima, descreva as estratégias de mitigação propostas ou já implementadas, os responsáveis e um cronograma estimado (se aplicável):", type: "textarea", weight: 0, atores: ["Desenvolvedor/Cientista de Dados"] },
             { id: "A.43_RISCO_RESIDUAL_ESTIMADO", text: "A.43 - Após a aplicação das estratégias de mitigação, qual o nível de risco residual estimado para cada um dos riscos principais? (Utilize uma escala como Baixo, Médio, Alto e justifique)", type: "textarea", weight: 0, atores: ["Desenvolvedor/Cientista de Dados"] },
             {
-                id: "A.44_ACEITABILIDADE_RISCO_RESIDUAL", text: "A.44 - A equipe do projeto considera o nível de risco residual geral da Solução/Ferramenta aceitável, dado o contexto, os benefícios esperados e as medidas de salvaguarda implementadas?", type: "radio",
+                id: "A.44_ACEITABILIDADE_RISCO_RESIDUAL", text: "A.44 - A equipe responsável considera o nível de risco residual geral da Solução/Ferramenta aceitável, dado o contexto, os benefícios esperados e as medidas de salvaguarda implementadas?", type: "radio",
                 options: [
                     { value: "sim_aceitavel_gerenciavel", text: "Sim, o risco residual é considerado aceitável e gerenciável.", score: 3, best_practice_description: "Atingir um nível de risco residual aceitável e gerenciável, com documentação clara das justificativas e aprovação formal da instância de governança." },
                     { value: "parcialmente_alguns_riscos_preocupam", text: "Parcialmente, alguns riscos residuais ainda geram preocupação e exigirão monitoramento intensivo ou medidas adicionais futuras.", score: 1, recommendation_if_chosen_and_suboptimal: "Elaborar planos para tratar os riscos residuais que ainda geram preocupação, intensificar o monitoramento e, se necessário, buscar validação da instância de governança para prosseguir." },
-                    { value: "nao_risco_residual_muito_alto", text: "Não, o risco residual ainda é considerado muito alto para prosseguir com a implementação ou operação sem revisões significativas ou garantias adicionais.", score: -3, reason_if_negative: "Risco residual geral da Solução/Ferramenta considerado inaceitável pela equipe do projeto, indicando necessidade de reavaliação fundamental.", recommendation_if_chosen_and_suboptimal: "Interromper ou revisar profundamente o projeto até que o risco residual seja reduzido a um nível aceitável, com aprovação formal das instâncias competentes." }
+                    { value: "nao_risco_residual_muito_alto", text: "Não, o risco residual ainda é considerado muito alto para prosseguir com a implementação ou operação sem revisões significativas ou garantias adicionais.", score: -3, reason_if_negative: "Risco residual geral da Solução/Ferramenta considerado inaceitável pela equipe responsável, indicando necessidade de reavaliação fundamental.", recommendation_if_chosen_and_suboptimal: "Interromper ou revisar profundamente a iniciativa/uso até que o risco residual seja reduzido a um nível aceitável, com aprovação formal das instâncias competentes." }
                 ], weight: 2, critical_flag_if_negative_score: true, requiresJustification: false, atores: ["Desenvolvedor/Cientista de Dados"]
             }
         ]
@@ -2391,7 +2595,7 @@
 
   function pontuacao() {
     return ["sAderencia","sImpacto","sViabilidade","sRisco","sReuso","sCusto"]
-      .reduce((acc, id) => acc + Number($(id).value || 0), 0);
+      .reduce((acc, id) => acc + Number($(id)?.value || 0), 0);
   }
 
   function getFlagList(list) {
@@ -2451,7 +2655,32 @@
     const answers = aieRespostas();
     const visibleQuestions = AIE_RISK_QUESTIONS.filter(q => aiePerguntaVisivel(q, answers));
     const answered = visibleQuestions.filter(q => q.type === "checkbox" ? (answers[q.id] || []).length > 0 : !!answers[q.id]).length;
-    box.innerHTML = `<strong>Questionário AIE</strong><span>${answered} de ${visibleQuestions.length} itens respondidos.</span>`;
+    const parcial = classificacaoPreliminarAIE();
+    box.innerHTML = `<strong>Questionário AIE</strong><span>${answered} de ${visibleQuestions.length} itens respondidos.</span><span>→ ${escapeHtml(parcial)}</span>`;
+  }
+
+  function classificacaoPreliminarAIE() {
+    const r = calcularAIE();
+    if (r.complete) return r.level;
+    if (r.partialLevel) return r.partialLevel;
+    return "Risco ainda indefinido";
+  }
+
+  function isNenhumValue(value) {
+    return /(^|_)nenhum|nenhuma|nao_ha|não há|nao ha/i.test(String(value || ""));
+  }
+
+  function aplicarExclusaoMutuaNenhum(input) {
+    if (!input || input.type !== "checkbox" || !input.checked) return;
+    const group = input.name;
+    if (!group) return;
+    const boxes = qsa(`input[type="checkbox"][name="${cssEscape(group)}"]`);
+    if (!boxes.length) return;
+    if (isNenhumValue(input.value)) {
+      boxes.forEach(box => { if (box !== input) box.checked = false; });
+    } else {
+      boxes.forEach(box => { if (box !== input && isNenhumValue(box.value)) box.checked = false; });
+    }
   }
 
   function aieRespondido() {
@@ -2513,14 +2742,18 @@
     let questionnaireVersion = "Não definida";
     let advice = "Responda às perguntas da Avaliação de Riscos para definir a versão da ficha.";
     let boxClass = "info";
+    let partialLevel = "Risco Baixo";
+    if (excessivo) partialLevel = "Risco Excessivo";
+    else if (totalPoints >= AIE_LIMITES.alto || gatilhosAlto >= 2 || condicaoDadosSensiveisAltoImpacto) partialLevel = "Risco Alto";
+    else if (totalPoints >= AIE_LIMITES.medio || gatilhosAlto >= 1) partialLevel = "Risco Médio";
 
     if (!aieRespondido()) {
-      return { level, questionnaireVersion, advice, boxClass, totalPoints, gatilhosAlto, fatores: Array.from(new Set(fatores)), complete: false, answers };
+      return { level, partialLevel, questionnaireVersion, advice, boxClass, totalPoints, gatilhosAlto, fatores: Array.from(new Set(fatores)), complete: false, answers };
     }
     if (excessivo) {
       level = "Risco Excessivo";
       questionnaireVersion = "Nenhuma";
-      advice = "Interromper o preenchimento da ficha. O projeto deve ser reavaliado quanto à legalidade, viabilidade ética, escopo e alternativas menos arriscadas.";
+      advice = "Interromper o preenchimento da ficha. A iniciativa/uso deve ser reavaliada quanto à legalidade, viabilidade ética, escopo e alternativas menos arriscadas.";
       boxClass = "danger";
     } else if (totalPoints >= AIE_LIMITES.alto || gatilhosAlto >= 2 || condicaoDadosSensiveisAltoImpacto) {
       level = "Risco Alto";
@@ -2564,6 +2797,22 @@
   function getAIEPrincipalSections(aieRisk = calcularAIE()) {
     const key = getAIEPrincipalKey(aieRisk);
     return key ? (AIE_FULL_CONFIG.questions[key] || []) : [];
+  }
+
+  function contagemAIEPrincipal(aieRisk = calcularAIE()) {
+    const sections = getAIEPrincipalSections(aieRisk);
+    let perguntas = 0;
+    sections.forEach(section => (section.questions || []).forEach(q => {
+      if (aiePrincipalQuestionIsActive(q)) perguntas++;
+    }));
+    return { secoes: sections.length, perguntas };
+  }
+
+  function estimativaAIEPrincipal(aieRisk = calcularAIE()) {
+    if (aieRisk.level === "Risco Alto") return "40–50 minutos";
+    if (aieRisk.level === "Risco Médio") return "25–35 minutos";
+    if (aieRisk.level === "Risco Baixo") return "15–20 minutos";
+    return "15–45 minutos";
   }
 
   function getAIEPreTriagemOriginalAnswers() {
@@ -2617,6 +2866,11 @@
     return String(value).replace(/[^a-zA-Z0-9_-]/g, "_");
   }
 
+  function cssEscape(value) {
+    if (window.CSS && typeof window.CSS.escape === "function") return window.CSS.escape(String(value));
+    return String(value || "").replace(/["\\]/g, "\\$&");
+  }
+
   function getAIEPrincipalSavedAnswers() {
     const answers = {};
     qsa(".aieMainInput").forEach(input => {
@@ -2661,20 +2915,26 @@
     }
 
     const saved = getAIEPrincipalSavedAnswers();
+    const nivelMudou = aiePrincipalUltimoNivel !== risk.level;
     aiePrincipalUltimoNivel = risk.level;
     if (versao) versao.textContent = getAIEPrincipalLabel(risk);
 
     const sections = getAIEPrincipalSections(risk);
-    let html = "";
-    sections.forEach(section => {
-      html += `<div class="aie-main-section" data-aie-section="${escapeHtml(section.section_id)}"><h3>${escapeHtml(section.section_title)}</h3>`;
+    const contagem = contagemAIEPrincipal(risk);
+    const totalPerguntas = sections.reduce((total, section) => total + (section.questions || []).filter(q => aiePrincipalQuestionIsActive(q)).length, 0);
+    let numeroPergunta = 0;
+    let html = `<div class="phase-notice"><strong>Este nível exige o questionário ${escapeHtml(getAIEPrincipalLabel(risk))}.</strong><br>Aproximadamente ${contagem.perguntas} perguntas em ${contagem.secoes} seções. Estimativa: ${escapeHtml(estimativaAIEPrincipal(risk))}.</div>`;
+    html += `<div class="question-progress" aria-hidden="true"><span id="aiePrincipalProgressBar"></span></div>`;
+    sections.forEach((section, index) => {
+      html += `<div class="aie-main-section" data-aie-section="${escapeHtml(section.section_id)}"><h3>${index + 1}. ${escapeHtml(section.section_title)}<span class="section-complete-badge" data-section-badge="${escapeHtml(section.section_id)}"></span><button type="button" data-toggle-section="${escapeHtml(section.section_id)}">Recolher</button></h3><div class="pa-section-questions">`;
       (section.questions || []).forEach(q => {
         if (!aiePrincipalQuestionIsActive(q)) {
           html += `<div class="skipped-question-note">Pergunta omitida por condição do AIE: ${escapeHtml((q.text || "").slice(0, 90))}...</div>`;
           return;
         }
+        numeroPergunta++;
         const domId = safeDomId(q.id);
-        html += `<fieldset class="aie-question"><legend>${escapeHtml(q.text || q.id)}</legend>`;
+        html += `<fieldset class="aie-question"><legend><span class="question-counter">Pergunta ${numeroPergunta}/${totalPerguntas}</span>${escapeHtml(q.text || q.id)}</legend>`;
         if (q.atores && q.atores.length) html += `<p class="question-actors">Papel(éis): ${escapeHtml(q.atores.join(", "))}</p>`;
         if (q.type === "radio") {
           html += `<div class="aie-options">`;
@@ -2692,7 +2952,7 @@
           });
           html += `</div>`;
           if (q.type === "checkbox_justified" || q.requiresJustification) {
-            html += `<label class="small" style="margin-top:10px">Justificativa/detalhes ${q.requiresJustification ? "(obrigatório)" : "(opcional)"}</label><textarea class="aieMainJustification" data-aie-main-justification="${escapeHtml(q.id)}" rows="3">${escapeHtml(saved[`${q.id}_justificativa`] || "")}</textarea>`;
+            html += `<div class="justification-block"><label class="small">Justificativa/detalhes ${q.requiresJustification ? "(obrigatório)" : "(opcional)"}</label><textarea class="aieMainJustification" data-aie-main-justification="${escapeHtml(q.id)}" rows="3">${escapeHtml(saved[`${q.id}_justificativa`] || "")}</textarea></div>`;
           }
         } else if (q.type === "textarea") {
           html += `<textarea class="aieMainInput" data-aie-main-question="${escapeHtml(q.id)}" name="main_${domId}" rows="4">${escapeHtml(saved[q.id] || "")}</textarea>`;
@@ -2701,14 +2961,30 @@
         }
         html += `</fieldset>`;
       });
-      html += `</div>`;
+      html += `</div></div>`;
     });
     container.innerHTML = html;
     qsa(".aieMainInput, .aieMainJustification").forEach(el => {
-      el.addEventListener("input", () => { renderResultado(); salvarRascunhoSessao(); });
-      el.addEventListener("change", () => { renderResultado(); salvarRascunhoSessao(); });
+      el.addEventListener("input", () => { renderResultado(); atualizarEstadoSecoesAIEPrincipal(); salvarRascunhoSessao(); });
+      el.addEventListener("change", () => { aplicarExclusaoMutuaNenhum(el); renderResultado(); atualizarEstadoSecoesAIEPrincipal(); salvarRascunhoSessao(); });
+    });
+    qsa("[data-toggle-section]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const section = document.querySelector(`[data-aie-section="${cssEscape(btn.dataset.toggleSection)}"]`);
+        if (!section) return;
+        section.classList.toggle("collapsed");
+        section.dataset.userExpanded = section.classList.contains("collapsed") ? "" : "true";
+        btn.textContent = section.classList.contains("collapsed") ? "Expandir" : "Recolher";
+      });
     });
     atualizarAIEPrincipalStatus();
+    atualizarEstadoSecoesAIEPrincipal();
+    if (nivelMudou && !force) {
+      setTimeout(() => {
+        const target = $("secAIEPrincipal");
+        if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 120);
+    }
   }
 
   function aiePrincipalRespostas() {
@@ -2851,7 +3127,7 @@
     let level, advice;
     if (totalScore < scoringRules.limite_nivel_1_score || criticalNegativeTriggersCount >= scoringRules.critical_triggers_nivel_1) {
       level = "Nível 1: Aderência Muito Baixa";
-      advice = "Reavaliar fundamentos do projeto antes de avançar.";
+      advice = "Reavaliar os fundamentos da iniciativa/uso antes de avançar.";
     } else if (pct < scoringRules.limite_nivel_2_percent || criticalNegativeTriggersCount >= scoringRules.critical_triggers_nivel_2) {
       level = "Nível 2: Aderência Baixa";
       advice = "Corrigir pontos estruturais antes de institucionalizar ou ampliar o uso.";
@@ -2888,7 +3164,32 @@
     const active = aiePrincipalActiveQuestions();
     const answers = aiePrincipalRespostas();
     const answered = active.filter(q => aieQuestionHasAnswer(q, answers)).length;
-    status.innerHTML = `<strong>Progresso do AIE principal:</strong> ${answered} de ${active.length} perguntas objetivas respondidas. <span class="small">Campos livres são registrados no relatório, mas não entram na pontuação.</span>`;
+    const sections = getAIEPrincipalSections(risk);
+    const currentSectionIndex = Math.min(sections.length, Math.max(1, sections.findIndex(section => {
+      const qs = (section.questions || []).filter(q => aiePrincipalQuestionIsActive(q));
+      return qs.some(q => !aieQuestionHasAnswer(q, answers));
+    }) + 1 || sections.length));
+    status.innerHTML = `<strong>Progresso do AIE principal:</strong> Seção ${currentSectionIndex} de ${sections.length} — ${answered} de ${active.length} perguntas respondidas. <span class="small">Campos livres são registrados no relatório, mas não entram na pontuação.</span>`;
+    const bar = $("aiePrincipalProgressBar");
+    if (bar) bar.style.width = active.length ? `${Math.round((answered / active.length) * 100)}%` : "0%";
+    atualizarBotaoIrFicha(active.length - answered);
+  }
+
+  function atualizarEstadoSecoesAIEPrincipal() {
+    const answers = aiePrincipalRespostas();
+    getAIEPrincipalSections().forEach(section => {
+      const el = document.querySelector(`[data-aie-section="${cssEscape(section.section_id)}"]`);
+      if (!el) return;
+      const qs = (section.questions || []).filter(q => aiePrincipalQuestionIsActive(q));
+      const complete = qs.length > 0 && qs.every(q => aieQuestionHasAnswer(q, answers));
+      const badge = document.querySelector(`[data-section-badge="${cssEscape(section.section_id)}"]`);
+      if (badge) badge.textContent = complete ? "✓ concluída" : "";
+      if (complete && !el.dataset.userExpanded) {
+        el.classList.add("collapsed");
+        const btn = el.querySelector("[data-toggle-section]");
+        if (btn) btn.textContent = "Expandir";
+      }
+    });
   }
 
   function renderAIEPrincipalResultado() {
@@ -2903,25 +3204,217 @@
     const result = calcularClassificacaoAIEPrincipal();
     const levelMatch = String(result.level || "").match(/Nível\s+(\d)/);
     const activeLevel = levelMatch ? Number(levelMatch[1]) : 0;
-    const levelsHtml = `<div class="level-scale-mini">${[1,2,3,4,5].map(n => `<span class="${n === activeLevel ? "active" : ""}">Nível ${n}</span>`).join("")}</div>`;
+    const levelsHtml = `<div class="level-scale-mini">${[1,2,3,4,5].map(n => {
+      const levelClass = n <= 2 ? "danger" : (n === 3 ? "medium" : "ok");
+      return `<span class="${n === activeLevel ? `active ${levelClass}` : ""}">Nível ${n}</span>`;
+    }).join("")}</div>`;
     const cls = result.complete ? (activeLevel <= 2 ? "danger" : activeLevel === 3 ? "medium" : "ok") : "medium";
     const secoes = Object.values(result.sectionPerformance || {}).map(s => `<li>${escapeHtml(s.title)}: ${escapeHtml(s.percentage)}% (${escapeHtml(s.score)}/${escapeHtml(s.maxScore)})</li>`).join("");
     box.className = "aie-main-result result " + cls;
     box.innerHTML = `
       <h3>${escapeHtml(result.level)}</h3>
       ${levelsHtml}
-      <p><strong>Pontuação:</strong> ${escapeHtml(result.score)} de ${escapeHtml(result.maxScore)} | <strong>Percentual:</strong> ${escapeHtml(result.percentage)}%</p>
       <p>${escapeHtml(result.advice || "")}</p>
-      ${!result.complete ? `<div class="inline-alert">Ainda há ${result.missing} pergunta(s) objetiva(s) sem resposta. A ficha JBRJ será liberada após a conclusão do AIE principal.</div>` : `<div class="box ok"><strong>AIE principal concluído.</strong> A ficha institucional do JBRJ foi liberada abaixo.</div>`}
+      ${!result.complete
+        ? `<div class="inline-alert">Ainda há ${result.missing} pergunta(s) objetiva(s) sem resposta. A ficha JBRJ será liberada após a conclusão do AIE principal.<div style="margin-top:10px"><button type="button" class="light" onclick="scrollParaFicha()">Ir para a primeira pendência</button></div></div>`
+        : `<div class="box ok"><strong>AIE principal concluído.</strong> A ficha institucional do JBRJ foi liberada abaixo.<div style="margin-top:10px"><button type="button" class="light" onclick="scrollParaFicha()">Ir para ficha JBRJ</button></div></div>`}
       <details open><summary>Principais fatores</summary><ul class="mini-list">${result.reasons.slice(0, 12).map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ul></details>
       <details><summary>Recomendações</summary><ul class="mini-list">${(result.recommendations.length ? result.recommendations : ["Não há recomendações automáticas adicionais."]).slice(0, 12).map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ul></details>
       <details><summary>Desempenho por seção</summary><ul class="mini-list">${secoes || "<li>Não informado</li>"}</ul></details>
     `;
   }
 
+  function atualizarBotaoIrFicha(pendenciasInformadas) {
+    const btn = $("btnIrFicha");
+    if (!btn) return;
+    const risk = calcularAIE();
+    const pendencias = Number.isFinite(pendenciasInformadas)
+      ? Math.max(0, pendenciasInformadas)
+      : Math.max(0, calcularClassificacaoAIEPrincipal().missing || 0);
+    const liberada = risk.complete && risk.level !== "Risco Excessivo" && pendencias === 0;
+    btn.textContent = liberada
+      ? "Ir para ficha JBRJ"
+      : pendencias > 0
+        ? `Responder ${pendencias} pendência(s) antes da ficha`
+        : "Concluir AIE para liberar ficha";
+    btn.setAttribute("aria-label", liberada
+      ? "Ir para a Ficha JBRJ"
+      : "Localizar a primeira pergunta pendente do AIE");
+    btn.title = liberada
+      ? "A Ficha JBRJ está liberada"
+      : "Clique para localizar a primeira pergunta ainda não respondida";
+  }
+
+  function primeiraPendenciaAIEPrincipal() {
+    const answers = aiePrincipalRespostas();
+    return aiePrincipalActiveQuestions().find(q => !aieQuestionHasAnswer(q, answers)) || null;
+  }
+
+  function focarPerguntaAIEPrincipal(question) {
+    if (!question) return false;
+    const input = document.querySelector(`[data-aie-main-question="${cssEscape(question.id)}"]`);
+    if (!input) return false;
+    const section = input.closest(".aie-main-section");
+    if (section && section.classList.contains("collapsed")) {
+      section.classList.remove("collapsed");
+      section.dataset.userExpanded = "true";
+      const toggle = section.querySelector("[data-toggle-section]");
+      if (toggle) toggle.textContent = "Recolher";
+    }
+    const fieldset = input.closest(".aie-question") || input;
+    fieldset.scrollIntoView({ behavior: "smooth", block: "center" });
+    setTimeout(() => input.focus({ preventScroll: true }), 350);
+    return true;
+  }
+
+  function gerarHtmlPreviaFichaJBRJ() {
+    const valor = id => escapeHtml(getVal(id) || "");
+    const resultadosMarcados = qsa(".resultados:checked").map(el => el.value);
+    const produto = document.querySelector('input[name="produtoInstitucionalIA"]:checked')?.value || "nao";
+    const checked = (condition) => condition ? "checked" : "";
+    const macroeixos = [
+      "Atividade finalística técnico-científica",
+      "Atividade finalística de ensino",
+      "Administração",
+      "TIC, dados e segurança",
+      "Transversal"
+    ];
+    const resultados = [
+      ["reduzir tempo", "Reduzir tempo"],
+      ["reduzir retrabalho", "Reduzir retrabalho"],
+      ["melhorar qualidade", "Melhorar a qualidade"],
+      ["ampliar acesso a dados", "Ampliar o acesso a dados"],
+      ["apoiar decisão humana", "Apoiar a decisão humana"]
+    ];
+    const indicadores = ["Tempo economizado", "Qualidade", "Redução de retrabalho", "Acesso a dados", "Redução de inconsistências", "Outro"];
+    return `<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Prévia da Ficha JBRJ</title>
+  <style>
+    :root{--blue:#123f63;--yellow:#f4c430;--bg:#f3f6f8;--border:#d9e1e6;--text:#23313b;--muted:#5f6f7a}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 Arial,sans-serif}
+    header{background:var(--blue);color:#fff;border-bottom:4px solid var(--yellow);padding:20px}
+    header div,main{width:min(960px,calc(100% - 28px));margin:auto} h1{margin:0;font-size:28px} header p{margin:6px 0 0;opacity:.92}
+    .notice{margin:18px 0;padding:13px 15px;border:1px solid #bfd3df;border-left:5px solid var(--blue);border-radius:10px;background:#fff}
+    section{margin:16px 0;background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 5px 18px rgba(18,63,99,.07)}
+    h2{margin:0;padding:13px 16px;background:var(--blue);color:#fff;font-size:19px}.content{padding:16px}.row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .field{margin-bottom:14px}label,.label{display:block;margin-bottom:6px;font-weight:700}input,textarea,select{width:100%;padding:10px;border:1px solid #bfcbd3;border-radius:8px;background:#fff;font:inherit}textarea{min-height:76px;resize:vertical}
+    .options{display:flex;flex-wrap:wrap;gap:8px 16px}.option{display:flex;gap:7px;align-items:center;font-weight:400}.option input{width:auto;margin:0}.hint{font-size:12px;color:var(--muted);margin-top:5px}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0 28px}button{border:0;border-radius:8px;background:var(--blue);color:#fff;padding:10px 14px;font-weight:700;cursor:pointer}button.secondary{background:#fff;color:var(--blue);border:1px solid var(--blue)}
+    @media(max-width:700px){.row{grid-template-columns:1fr}h1{font-size:23px}} @media print{.actions,.notice{display:none}body{background:#fff}section{box-shadow:none;break-inside:avoid}}
+  </style>
+</head>
+<body>
+<header><div><h1>Ficha JBRJ — Iniciativa/Uso de IA</h1><p>Prévia independente do preenchimento do AIE</p></div></header>
+<main>
+  <div class="notice"><strong>Modo de visualização.</strong> Esta prévia permite conhecer e revisar a estrutura da Ficha JBRJ. A liberação do preenchimento definitivo e do relatório para o SEI continua condicionada à conclusão do AIE.</div>
+  <section><h2>1. Identificação da iniciativa</h2><div class="content">
+    <div class="row"><div class="field"><label>Nome da iniciativa</label><input value="${valor("nome") || valor("aieNomeProjeto")}" placeholder="Nome da iniciativa"></div><div class="field"><label>Área responsável</label><input value="${valor("area")}" placeholder="Ex.: CNCFlora, DIPEQ, ENBT, CTIC ou DG"></div></div>
+    <div class="field"><span class="label">Macroeixo</span><div class="options">${macroeixos.map(item => `<label class="option"><input type="radio" name="previaMacroeixo" ${checked(getVal("macroeixo") === item)}> ${escapeHtml(item)}</label>`).join("")}</div></div>
+    <div class="row"><div class="field"><label>Responsável técnico ou gestor</label><input value="${valor("responsavel")}"></div><div class="field"><label>Equipe envolvida</label><input value="${valor("equipe")}"></div></div>
+    <div class="row"><div class="field"><label>Processo SEI, se houver</label><input value="${valor("sei")}" placeholder="02011.xxxxxx/2026-xx"></div><div class="field"><label>Data prevista de início</label><input type="date" value="${valor("inicio")}"></div></div>
+    <div class="field"><label>Prazo estimado</label><input value="${valor("prazo")}" placeholder="Ex.: 30 dias, 3 meses ou uso continuado"></div>
+  </div></section>
+  <section><h2>2. Objetivo e escopo</h2><div class="content">
+    <div class="field"><label>Problema a resolver</label><textarea placeholder="Descreva o problema institucional.">${valor("problema") || valor("aieFinalidade")}</textarea></div>
+    <div class="field"><label>O que a IA fará?</label><textarea placeholder="Descreva as tarefas executadas ou apoiadas pela IA.">${valor("iafara")}</textarea></div>
+    <div class="field"><span class="label">Resultado esperado</span><div class="options">${resultados.map(([value,label]) => `<label class="option"><input type="checkbox" ${checked(resultadosMarcados.includes(value))}> ${escapeHtml(label)}</label>`).join("")}<label class="option"><input type="checkbox" ${checked(!!getVal("resultadoOutro"))}> Outro</label></div></div>
+    <div class="field"><label>Outro resultado esperado</label><input value="${valor("resultadoOutro")}"></div>
+  </div></section>
+  <section><h2>3. Indicadores e registro de uso</h2><div class="content">
+    <div class="field"><span class="label">Indicador de resultado</span><div class="options">${indicadores.map(item => `<label class="option"><input type="radio" name="previaIndicador" ${checked(getVal("indicador") === item)}> ${escapeHtml(item)}</label>`).join("")}</div></div>
+    <div class="field"><label>Como será medido?</label><textarea>${valor("medicao")}</textarea></div>
+    <div class="field"><span class="label">Haverá produto institucional com uso substancial de IA?</span><div class="options"><label class="option"><input type="radio" name="previaProduto" ${checked(produto === "nao")}> Não</label><label class="option"><input type="radio" name="previaProduto" ${checked(produto === "sim")}> Sim</label></div></div>
+    <div class="field"><label>Como o uso será declarado?</label><textarea placeholder="Preencher quando a resposta for sim.">${valor("declaracaoUsoIA")}</textarea></div>
+  </div></section>
+  <section><h2>4. Ciência e validação</h2><div class="content">
+    <div class="row"><div class="field"><label>Responsável pela iniciativa — nome</label><input value="${valor("validador") || valor("responsavel")}"></div><div class="field"><label>Data</label><input type="date" value="${valor("dataResponsavel")}"></div></div>
+    <div class="row"><div class="field"><label>Gestor da área, quando aplicável — nome</label><input value="${valor("gestorArea")}"></div><div class="field"><label>Data</label><input type="date" value="${valor("dataGestorArea")}"></div></div>
+    <div class="row"><div class="field"><label>Orientação técnica ou manifestação prévia — área ou instância</label><input value="${valor("orientacaoArea")}"></div><div class="field"><label>Data</label><input type="date" value="${valor("dataOrientacao")}"></div></div>
+  </div></section>
+  <div class="actions"><button type="button" onclick="window.print()">Imprimir prévia</button><button type="button" class="secondary" onclick="window.close()">Fechar</button></div>
+</main>
+</body></html>`;
+  }
+
+  function abrirPreviaFichaJBRJ() {
+    const w = window.open("", "_blank");
+    if (!w) {
+      mostrarToast("O navegador bloqueou a nova aba. Permita pop-ups para visualizar a Ficha JBRJ.", "error");
+      return;
+    }
+    w.document.open();
+    w.document.write(gerarHtmlPreviaFichaJBRJ());
+    w.document.close();
+  }
+
   function scrollParaFicha() {
-    const target = $("secIdentificacao") || $("secAIEPrincipal");
-    if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+    const risk = calcularAIE();
+    if (!risk.complete) {
+      mostrarToast("Conclua primeiro as perguntas da avaliação de risco inicial.", "error");
+      $("secAIE")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+    if (risk.level === "Risco Excessivo") {
+      mostrarToast("O risco excessivo interrompe o fluxo. Reavalie a iniciativa/uso antes de preencher a ficha.", "error");
+      $("aieClassificacaoTela")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+
+    const pendencia = primeiraPendenciaAIEPrincipal();
+    if (pendencia) {
+      mostrarToast("A Ficha JBRJ será liberada após todas as perguntas objetivas do AIE.", "error");
+      focarPerguntaAIEPrincipal(pendencia);
+      return;
+    }
+
+    aplicarFluxoAIE(risk);
+    requestAnimationFrame(() => {
+      const target = $("secIdentificacao");
+      if (!target || target.style.display === "none") {
+        mostrarToast("Não foi possível liberar a ficha. Revise se ainda existe alguma pergunta pendente.", "error");
+        return;
+      }
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+      setTimeout(() => {
+        const firstField = target.querySelector("input:not([disabled]), textarea:not([disabled]), select:not([disabled])");
+        if (firstField) firstField.focus({ preventScroll: true });
+      }, 350);
+      mostrarToast("Ficha JBRJ aberta.");
+    });
+  }
+
+  function atualizarStepper(aieRisk = calcularAIE()) {
+    const principalDisponivel = aieRisk.complete && aieRisk.level !== "Risco Excessivo";
+    const principalConcluido = principalDisponivel && aiePrincipalCompleto();
+    const fichaVisivel = principalConcluido;
+    const resultadoDisponivel = fichaVisivel || (aieRisk.complete && aieRisk.level === "Risco Excessivo");
+    const resultadoGerado = resultadoDisponivel && $("relatorio") && !$("relatorio").textContent.startsWith("Nenhum relatório");
+    let active = "risk";
+    if (aieRisk.complete && aieRisk.level === "Risco Excessivo") active = "resultado";
+    else if (principalDisponivel && !principalConcluido) active = "principal";
+    else if (fichaVisivel && !resultadoGerado) active = "ficha";
+    else if (resultadoGerado) active = "resultado";
+
+    const done = {
+      risk: aieRisk.complete,
+      principal: principalConcluido,
+      ficha: fichaVisivel,
+      resultado: resultadoGerado
+    };
+
+    qsa("#workflowStepper .workflow-step").forEach(step => {
+      const key = step.dataset.step;
+      step.classList.toggle("done", !!done[key]);
+      step.classList.toggle("active", key === active);
+      step.classList.toggle("pending", key !== active && !done[key]);
+      const label = step.querySelector("strong");
+      if (label && done[key] && !label.textContent.startsWith("✓ ")) label.textContent = "✓ " + label.textContent.replace(/^✓\s*/, "");
+      if (label && !done[key]) label.textContent = label.textContent.replace(/^✓\s*/, "");
+    });
   }
 
   function aiePrincipalResultadoResumo() {
@@ -2989,8 +3482,8 @@
 
     let baseline = "";
     if (exemplo === "assistivo") baseline = "Uso assistivo com dados públicos";
-    else if (exemplo === "baixo") baseline = "Projeto-piloto de baixo risco";
-    else if (exemplo === "medio") baseline = "Projeto de médio risco";
+    else if (exemplo === "baixo") baseline = "Iniciativa/Uso piloto de baixo risco";
+    else if (exemplo === "medio") baseline = "Iniciativa/Uso de médio risco";
     else if (exemplo === "alto") baseline = "Alto risco ou institucionalização";
 
     // Fatores de alto risco ou manifestação prévia
@@ -3006,7 +3499,7 @@
     if (frequencia === "continuado") medium.push("uso continuado em processo interno");
     if (frequencia === "piloto") medium.push("piloto controlado");
     if (decisao === "apoio") medium.push("apoio à decisão humana");
-    if (exemplo === "medio") medium.push("exemplo orientador selecionado corresponde a projeto de médio risco");
+    if (exemplo === "medio") medium.push("exemplo orientador selecionado corresponde a iniciativa/uso de médio risco");
 
     let nivel, encaminhamento, boxClass, aie, leituraPontuacao;
 
@@ -3041,12 +3534,12 @@
       boxClass = "danger";
       aie = "Aplicar AIE de forma completa ou equivalente, além de análise técnica, segurança, LGPD/jurídica quando aplicável.";
     } else if (medium.length > 0) {
-      nivel = "Projeto de médio risco";
+      nivel = "Iniciativa/Uso de médio risco";
       encaminhamento = "Realizar registro técnico e buscar orientação da área competente quando houver dados restritos, integração, licenças, contratação, armazenamento de saídas ou impacto operacional relevante.";
       boxClass = "medium";
       aie = "Aplicar AIE simplificado ou proporcional, conforme escopo, dados e impacto.";
-    } else if (baseline === "Projeto-piloto de baixo risco" || frequencia === "piloto") {
-      nivel = "Projeto-piloto de baixo risco";
+    } else if (baseline === "Iniciativa/Uso piloto de baixo risco" || frequencia === "piloto") {
+      nivel = "Iniciativa/Uso piloto de baixo risco";
       encaminhamento = "Realizar registro simplificado pela área responsável para acompanhamento e aprendizagem institucional.";
       boxClass = "ok";
       aie = "AIE completo não é necessário como regra; usar checklist simplificado se a área desejar.";
@@ -3156,7 +3649,7 @@
       : "";
     box.className = "result " + (aieRisk.boxClass || "info");
     box.innerHTML = `
-      <h3>${escapeHtml(aieRisk.level)}</h3>
+      <h3>${labelRiscoComIcone(aieRisk.level)}</h3>
       <p>${escapeHtml(aieRisk.advice)}</p>
       ${fatores}
     `;
@@ -3182,10 +3675,10 @@
     box.style.display = "block";
     const titulo = $("aieClassificacaoTitulo");
     const texto = $("aieClassificacaoTexto");
-    if (titulo) titulo.textContent = "Classificação AIE: " + aieRisk.level;
+    if (titulo) titulo.innerHTML = `${labelRiscoComIcone("Classificação AIE: " + aieRisk.level)}`;
     if (texto) {
       texto.textContent = aieRisk.level === "Risco Excessivo"
-        ? "O preenchimento da ficha foi interrompido. Reavalie o projeto antes de prosseguir."
+        ? "O preenchimento da ficha foi interrompido. Reavalie a iniciativa/uso antes de prosseguir."
         : `Próxima etapa: ${aieRisk.questionnaireVersion === "Simplificada" ? "ficha simplificada" : "ficha de avaliação"}.`;
     }
   }
@@ -3195,7 +3688,7 @@
     const answers = aieRisk.answers || {};
 
     if ($("nome") && !getVal("nome") && getVal("aieNomeProjeto")) $("nome").value = getVal("aieNomeProjeto");
-    if ($("iafara") && !getVal("iafara") && getVal("aieFinalidade")) $("iafara").value = getVal("aieFinalidade");
+    if ($("problema") && !getVal("problema") && getVal("aieFinalidade")) $("problema").value = getVal("aieFinalidade");
 
     if ($("dPessoal")) $("dPessoal").checked = answers.aieDadosPessoais === "sim_dp";
     if ($("dPessoalSensivel")) $("dPessoalSensivel").checked = answers.aieDadosSensiveis === "sim_sensiveis";
@@ -3212,11 +3705,21 @@
       else if (aieRisk.level === "Risco Alto") $("exemploOrientador").value = "alto";
     }
 
+    if ($("validador") && !getVal("validador") && getVal("responsavel")) $("validador").value = getVal("responsavel");
     aiePrefillApplied = true;
   }
 
+  function atualizarCamposFichaJBRJ() {
+    const produto = document.querySelector('input[name="produtoInstitucionalIA"]:checked')?.value || "nao";
+    const campoDeclaracao = $("campoDeclaracaoUsoIA");
+    if (campoDeclaracao) campoDeclaracao.style.display = produto === "sim" ? "block" : "none";
+    if ($("ctrlDeclaracao")) $("ctrlDeclaracao").checked = produto === "sim";
+    if ($("miniDeclaracao")) $("miniDeclaracao").checked = produto === "sim";
+    if ($("validador") && !getVal("validador") && getVal("responsavel")) $("validador").value = getVal("responsavel");
+  }
+
   function setFichaBloqueada(bloqueada) {
-    ["secIdentificacao","secObjetivo","secDados","secAssistivoRapido","secFerramenta","secSupervisao","secPontuacao"].forEach(id => {
+    ["secIdentificacao","secObjetivo","secDados","secAssistivoRapido","secFerramenta","secSupervisao"].forEach(id => {
       const el = $(id);
       if (!el) return;
       el.classList.toggle("blocked-form", bloqueada);
@@ -3238,17 +3741,21 @@
     const principalDisponivel = aieRisk.complete && !excessivo;
     const principalConcluido = principalDisponivel && aiePrincipalCompleto();
     const showPostAie = principalConcluido;
+    const showResultado = showPostAie || excessivo;
+
+    atualizarBotaoIrFicha();
 
     setFichaBloqueada(!showPostAie);
     if (showPostAie) aplicarDadosAIEnaFicha(aieRisk);
 
     const showAieForm = incomplete || editandoAIE;
     show("secAIE", showAieForm);
+    show("inicioExemplos", incomplete);
     show("secAIEPrincipal", principalDisponivel);
     renderClassificacaoTela(aieRisk);
 
     const grid = $("fluxoGrid");
-    if (grid) grid.classList.toggle("aie-focus", !showPostAie && !principalDisponivel);
+    if (grid) grid.classList.toggle("aie-focus", !showResultado && !principalDisponivel);
     const etapa = $("etapaAtual");
     if (etapa) {
       if (incomplete) etapa.textContent = "AIE — Avaliação de risco";
@@ -3257,43 +3764,48 @@
       else if (aieRisk.level === "Risco Baixo") etapa.textContent = "Ficha JBRJ + AIE concluído (" + aieRisk.level + ")";
       else etapa.textContent = "Ficha JBRJ + AIE concluído (" + aieRisk.level + ")";
     }
-    ["painelResultado"].forEach(id => show(id, showPostAie));
+    ["painelResultado"].forEach(id => show(id, showResultado));
+    atualizarStepper(aieRisk);
 
     if (incomplete) {
       show("aieClassificacaoTela", false);
       show("secAIEPrincipal", false);
-      ["secIdentificacao","secObjetivo","secDados","secAssistivoRapido","secFerramenta","secSupervisao","secPontuacao"].forEach(id => show(id, false));
+      ["secIdentificacao","secObjetivo","secDados","secAssistivoRapido","secFerramenta","secSupervisao"].forEach(id => show(id, false));
       return;
     }
 
     if (excessivo) {
-      ["secIdentificacao","secObjetivo","secDados","secAssistivoRapido","secFerramenta","secSupervisao","secPontuacao"].forEach(id => show(id, false));
+      ["secIdentificacao","secObjetivo","secDados","secAssistivoRapido","secFerramenta","secSupervisao"].forEach(id => show(id, false));
       return;
     }
 
     if (!principalConcluido) {
-      ["secIdentificacao","secObjetivo","secDados","secAssistivoRapido","secFerramenta","secSupervisao","secPontuacao"].forEach(id => show(id, false));
+      ["secIdentificacao","secObjetivo","secDados","secAssistivoRapido","secFerramenta","secSupervisao"].forEach(id => show(id, false));
       return;
     }
 
-    const baixo = aieRisk.level === "Risco Baixo";
-    ["secIdentificacao","secObjetivo","secDados"].forEach(id => show(id, true));
-    show("secAssistivoRapido", baixo);
-    show("secFerramenta", !baixo);
-    show("secSupervisao", !baixo);
-    show("secPontuacao", false);
-
-    ["responsavel","equipe","sei","inicio","prazo"].forEach(id => setFieldVisible(id, !baixo));
-    ["problema","iafara","decisao"].forEach(id => setFieldVisible(id, !baixo));
-    qsa("#secObjetivo h3, #secObjetivo .checks").forEach(el => el.style.display = baixo ? "none" : "");
-    qsa("#secDados .row, #secDados details, #secDados h3, #secDados .checks").forEach(el => el.style.display = baixo ? "none" : "");
-    setFieldVisible("tratamentoDados", !baixo);
-
-    const miniTitle = $("secAssistivoRapido")?.querySelector("h2");
-    if (miniTitle) miniTitle.textContent = baixo ? "Ficha simplificada — risco baixo pelo AIE" : "Fast path — uso assistivo com dados públicos";
+    ["secIdentificacao","secObjetivo","secDados","secSupervisao"].forEach(id => show(id, true));
+    show("secAssistivoRapido", false);
+    show("secFerramenta", false);
+    atualizarCamposFichaJBRJ();
+    atualizarStepper(aieRisk);
   }
 
   function revisarAIE() {
+    if (aiePrincipalCompleto()) {
+      abrirConfirmacao({
+        title: "Revisar AIE?",
+        message: "Revisar a classificação de risco pode mudar a versão do questionário principal e descartar respostas incompatíveis com o novo nível.",
+        okText: "Revisar AIE",
+        danger: false,
+        onConfirm: executarRevisaoAIE
+      });
+      return;
+    }
+    executarRevisaoAIE();
+  }
+
+  function executarRevisaoAIE() {
     editandoAIE = true;
     aiePrefillApplied = false;
     renderResultado();
@@ -3318,6 +3830,7 @@
 
   function renderResultado() {
     atualizarVisibilidadeAIE();
+    atualizarCamposFichaJBRJ();
     const aieAtual = calcularAIE();
     if (aieAtual.complete && aieAtual.level !== "Risco Excessivo") aplicarDadosAIEnaFicha(aieAtual);
     const r = inferir();
@@ -3343,7 +3856,7 @@
     $("resultado").className = "result " + analiseFicha.boxClass;
     const aieFinal = aiePrincipalResultadoResumo();
     $("resultado").innerHTML = `
-      <h3>Classificação de risco AIE: ${escapeHtml(r.aieRisk.level || "Não classificado")}</h3>
+      <h3>Classificação de risco AIE: ${labelRiscoComIcone(r.aieRisk.level || "Não classificado")}</h3>
       <p><strong>Resultado final do AIE:</strong> ${escapeHtml(aieFinal.nivel || "Pendente")} ${aieFinal.completo ? `(${escapeHtml(aieFinal.percentual)}%)` : ""}</p>
       <p><strong>Análise complementar da ficha:</strong> ${escapeHtml(analiseFicha.situacao)}</p>
       <p><strong>Por quê:</strong></p>
@@ -3374,32 +3887,22 @@
     if (!aieRisk.complete || aieRisk.level === "Risco Excessivo") {
       return [];
     }
-    if (aieRisk.level === "Risco Baixo" || isFastPathAssistivo()) {
-      return [
-        ["nome", "nome da iniciativa"],
-        ["area", "área responsável"],
-        ["macroeixo", "macroeixo"],
-        ["dadosPrincipais", "descrição dos dados utilizados"],
-        ["miniValidador", "quem validará o resultado"],
-        ["miniFerramenta", "ferramenta usada"]
-      ];
-    }
     return [
       ["nome", "nome da iniciativa"],
       ["area", "área responsável"],
       ["macroeixo", "macroeixo"],
-      ["dadosPrincipais", "descrição dos dados utilizados"],
-      ["fontes", "fonte dos dados"],
-      ["tratamentoDados", "o que será feito com os dados"],
-      ["validador", "responsável pela validação humana"],
-      ["indicador", "indicador mínimo de resultado"]
+      ["problema", "problema a resolver"],
+      ["iafara", "descrição do que a IA fará"],
+      ["indicador", "indicador de resultado"],
+      ["medicao", "forma de medição"],
+      ["validador", "responsável pela iniciativa"]
     ];
   }
 
   function camposMinimosFaltantes() {
     const aieRisk = calcularAIE();
     if (!aieRisk.complete) return ["classificação AIE inicial completa"];
-    if (aieRisk.level === "Risco Excessivo") return ["reavaliação do projeto antes de preencher a ficha"];
+    if (aieRisk.level === "Risco Excessivo") return ["reavaliação da iniciativa/uso antes de preencher a ficha"];
     return camposMinimosLista().filter(([id]) => !getVal(id)).map(([,label]) => label);
   }
 
@@ -3436,14 +3939,17 @@
         exemplo_orientador: getVal("exemploOrientador"),
         analise_complementar_da_ficha: analiseFicha.situacao,
         decisao: getVal("decisao"),
-        resultados_esperados: selectedChecks("resultados")
+        resultados_esperados: [
+          ...selectedChecks("resultados"),
+          ...(getVal("resultadoOutro") ? [getVal("resultadoOutro")] : [])
+        ]
       },
       dados: {
         dados_principais: getVal("dadosPrincipais"),
         dados_essenciais: getVal("dadosEssenciais"),
         fontes: getVal("fontes"),
         tratamento_previsto: getVal("tratamentoDados"),
-        classificacoes_marcadas: qsa(".dataFlag:checked").map(x => x.parentElement.innerText.trim().replace(/\s+/g, " ")),
+        classificacoes_marcadas: qsa(".dataFlag:checked").map(x => (x.parentElement.textContent || "").trim().replace(/\s+/g, " ")),
         upload_externo: checked("uploadExterno"),
         divulgacao_externa_sensivel: checked("divulgacaoExterna")
       },
@@ -3458,7 +3964,7 @@
       },
       supervisao_controles_indicadores: {
         validador: getVal("validador"),
-        indicador: getVal("indicador"),
+        indicador: getVal("indicador") === "Outro" && getVal("indicadorOutro") ? getVal("indicadorOutro") : getVal("indicador"),
         medicao: getVal("medicao"),
         controles_marcados: [
           ["Revisão humana", checked("ctrlRevisao")],
@@ -3468,6 +3974,18 @@
           ["Orientação CTIC/Segurança", checked("ctrlCTIC")],
           ["Declaração de uso de IA", checked("ctrlDeclaracao")]
         ].filter(x => x[1]).map(x => x[0])
+      },
+      registro_uso: {
+        produto_institucional_uso_substancial_ia: document.querySelector('input[name="produtoInstitucionalIA"]:checked')?.value === "sim",
+        forma_declaracao: getVal("declaracaoUsoIA")
+      },
+      ciencia_validacao: {
+        responsavel_iniciativa: getVal("validador"),
+        data_responsavel: getVal("dataResponsavel"),
+        gestor_area: getVal("gestorArea"),
+        data_gestor_area: getVal("dataGestorArea"),
+        orientacao_area_instancia: getVal("orientacaoArea"),
+        data_orientacao: getVal("dataOrientacao")
       },
       avaliacao: {
         observacoes_avaliador: getVal("obsAvaliador"),
@@ -3504,15 +4022,63 @@
     };
   }
 
+  function respostaAIEPrincipalLegivel(q, respostas) {
+    const valor = respostas[q.id];
+    const valores = Array.isArray(valor) ? valor : (valor === undefined || valor === null || valor === "" ? [] : [valor]);
+    const textos = valores.map(item => {
+      const opcao = (q.options || []).find(opt => opt.value === item);
+      return opcao ? (opcao.text || opcao.value) : item;
+    });
+    const justificativa = respostas[`${q.id}_justificativa`];
+    let resposta = textos.join("; ") || (q.type === "textarea" || q.type === "text_input" ? "Campo livre não obrigatório" : "Não informado");
+    if (justificativa && String(justificativa).trim()) resposta += ` | Justificativa: ${String(justificativa).trim()}`;
+    return resposta;
+  }
+
+  function gerarTextoRespostasAIEPrincipal() {
+    const perguntas = aiePrincipalActiveQuestions();
+    const respostas = aiePrincipalRespostas();
+    if (!perguntas.length) return "Não se aplica: o fluxo foi interrompido na avaliação inicial ou não exige questionário principal.";
+    let secaoAtual = "";
+    const linhas = [];
+    perguntas.forEach(q => {
+      if (q.section_title !== secaoAtual) {
+        secaoAtual = q.section_title;
+        linhas.push(`\n${secaoAtual.toUpperCase()}`);
+      }
+      linhas.push(`- ${q.text || q.id}\n  Resposta: ${respostaAIEPrincipalLegivel(q, respostas)}`);
+    });
+    return linhas.join("\n").trim();
+  }
+
+  function gerarHtmlRespostasAIEPrincipal() {
+    const perguntas = aiePrincipalActiveQuestions();
+    const respostas = aiePrincipalRespostas();
+    if (!perguntas.length) return '<div class="box"><p>Não se aplica: o fluxo foi interrompido na avaliação inicial ou não exige questionário principal.</p></div>';
+    let secaoAtual = "";
+    let html = "";
+    perguntas.forEach(q => {
+      if (q.section_title !== secaoAtual) {
+        if (secaoAtual) html += "</tbody></table>";
+        secaoAtual = q.section_title;
+        html += `<h3>${escapeHtml(secaoAtual)}</h3><table><tbody>`;
+      }
+      html += `<tr><th>${escapeHtml(q.text || q.id)}</th><td>${textoHtmlPdf(respostaAIEPrincipalLegivel(q, respostas))}</td></tr>`;
+    });
+    if (secaoAtual) html += "</tbody></table>";
+    return html;
+  }
+
   function gerarTextoRelatorio() {
     const d = coletarDados();
     const linha = "============================================================";
     return `${linha}
-TRIAGEM IA JBRJ — REGISTRO E AVALIAÇÃO PROPORCIONAL
+RELATÓRIO CONSOLIDADO — INICIATIVA/USO DE IA — JBRJ
+Documento para instrução do processo SEI
 ${linha}
 
 0. AIE — AVALIAÇÃO DE RISCOS INICIAL
-Projeto/Solução/Ferramenta: ${d.aie_avaliacao_de_riscos.nome_projeto || "Não informado"}
+Iniciativa/Uso/Solução/Ferramenta: ${d.aie_avaliacao_de_riscos.nome_projeto || "Não informado"}
 Órgão/Entidade: ${d.aie_avaliacao_de_riscos.orgao_entidade || "JBRJ"}
 Finalidade/objetivos: ${d.aie_avaliacao_de_riscos.finalidade_objetivos || "Não informado"}
 Nível AIE: ${d.aie_avaliacao_de_riscos.nivel}
@@ -3528,6 +4094,9 @@ Pontuação final: ${d.aie_resultado_final.pontuacao || 0} / ${d.aie_resultado_f
 Percentual: ${d.aie_resultado_final.percentual || "0.0"}%
 Pendências objetivas: ${d.aie_resultado_final.pendencias_objetivas || 0}
 Recomendação geral: ${d.aie_resultado_final.recomendacao_geral || "Não informado"}
+
+0.2 REGISTRO DETALHADO DO QUESTIONÁRIO PRINCIPAL DO AIE
+${gerarTextoRespostasAIEPrincipal()}
 
 1. IDENTIFICAÇÃO
 Nome da iniciativa: ${d.identificacao.nome || "Não informado"}
@@ -3546,61 +4115,29 @@ ${d.objetivo_escopo.problema || "Não informado"}
 O que a IA fará:
 ${d.objetivo_escopo.o_que_a_ia_fara || "Não informado"}
 
-Exemplo orientador selecionado: ${d.objetivo_escopo.exemplo_orientador || "Não informado"}
-Análise complementar da ficha: ${d.resultado_automatico.analise_complementar_da_ficha || "Não classificada"}
-Decisão: ${d.objetivo_escopo.decisao || "Não informado"}
 Resultados esperados: ${d.objetivo_escopo.resultados_esperados.join(", ") || "Não informado"}
 
-3. DADOS
-Quais dados serão utilizados:
-${d.dados.dados_principais || "Não informado"}
-
-Dados essenciais:
-${d.dados.dados_essenciais || "Não informado"}
-
-Fontes dos dados:
-${d.dados.fontes || "Não informado"}
-
-O que será feito com os dados:
-${d.dados.tratamento_previsto || "Não informado"}
-
-Classificações marcadas:
-${d.dados.classificacoes_marcadas.join("\n- ") ? "- " + d.dados.classificacoes_marcadas.join("\n- ") : "Não informado"}
-
-Upload/envio externo: ${d.dados.upload_externo ? "Sim" : "Não"}
-Divulgação externa sensível: ${d.dados.divulgacao_externa_sensivel ? "Sim" : "Não"}
-
-4. FERRAMENTA, AMBIENTE E INFRAESTRUTURA
-Ferramenta/modelo/provedor: ${d.ferramenta_ambiente.ferramenta || d.avaliacao.mini_ferramenta || "Não informado"}
-Tipo de solução: ${d.ferramenta_ambiente.tipo_solucao || "Não informado"}
-Ambiente: ${d.ferramenta_ambiente.ambiente || "Não informado"}
-Uso previsto: ${d.ferramenta_ambiente.frequencia || "Não informado"}
-Contratação/instrumento formal: ${d.ferramenta_ambiente.contratacao ? "Sim" : "Não"}
-Integração com sistema institucional: ${d.ferramenta_ambiente.integracao ? "Sim" : "Não"}
-Integração crítica: ${d.ferramenta_ambiente.integracao_critica ? "Sim" : "Não"}
-
-5. SUPERVISÃO E INDICADORES
-Responsável pela validação humana: ${d.supervisao_controles_indicadores.validador || d.avaliacao.mini_validador || "Não informado"}
-Indicador mínimo: ${d.supervisao_controles_indicadores.indicador || "Não informado"}
+3. INDICADORES E REGISTRO DE USO
+Indicador de resultado: ${d.supervisao_controles_indicadores.indicador || "Não informado"}
 Como será medido:
 ${d.supervisao_controles_indicadores.medicao || "Não informado"}
 
-Controles marcados:
-${d.supervisao_controles_indicadores.controles_marcados.join("\n- ") ? "- " + d.supervisao_controles_indicadores.controles_marcados.join("\n- ") : "Não informado"}
+Produto institucional com uso substancial de IA: ${d.registro_uso.produto_institucional_uso_substancial_ia ? "Sim" : "Não"}
+Forma de declaração: ${d.registro_uso.forma_declaracao || "Não se aplica ou não informado"}
 
-6. PONTUAÇÃO
-Aderência institucional: ${d.pontuacao.aderencia}
-Impacto esperado: ${d.pontuacao.impacto}
-Viabilidade: ${d.pontuacao.viabilidade}
-Risco controlável: ${d.pontuacao.risco_controlavel}
-Reutilização: ${d.pontuacao.reutilizacao}
-Custo proporcional: ${d.pontuacao.custo_proporcional}
-TOTAL: ${d.pontuacao.total}/16
-Leitura: ${d.pontuacao.leitura}
+4. CIÊNCIA E VALIDAÇÃO
+Responsável pela iniciativa: ${d.ciencia_validacao.responsavel_iniciativa || "Não informado"}
+Data: ${d.ciencia_validacao.data_responsavel || "Não informada"}
+Gestor da área, quando aplicável: ${d.ciencia_validacao.gestor_area || "Não informado"}
+Data: ${d.ciencia_validacao.data_gestor_area || "Não informada"}
+Orientação técnica ou manifestação prévia, quando aplicável: ${d.ciencia_validacao.orientacao_area_instancia || "Não informado"}
+Data: ${d.ciencia_validacao.data_orientacao || "Não informada"}
+
+5. OBSERVAÇÕES
 Observações do avaliador:
 ${d.avaliacao.observacoes_avaliador || "Não informado"}
 
-7. RESULTADO
+6. RESULTADO
 Classificação AIE: ${d.resultado_automatico.classificacao_aie}
 Análise complementar da ficha: ${d.resultado_automatico.analise_complementar_da_ficha}
 Encaminhamento:
@@ -3633,50 +4170,26 @@ Esta triagem é instrumento de apoio. A pontuação não autoriza automaticament
   }
 
   function atualizarFastPathAssistivo() {
-    const ativo = isFastPathAssistivo();
     const mini = $("secAssistivoRapido");
-    if (mini) mini.style.display = ativo ? "block" : "none";
-    if (!checked("modoRapido")) {
-      ["secFerramenta", "secSupervisao"].forEach(id => {
-        const el = $(id);
-        if (el) el.style.display = ativo ? "none" : "";
-      });
-      const secDados = $("secDados");
-      if (secDados) {
-        qsa("#secDados .row, #secDados details, #secDados h3, #secDados .checks").forEach(el => {
-          el.style.display = ativo ? "none" : "";
-        });
-      }
-    }
+    if (mini) mini.style.display = "none";
+    const ferramenta = $("secFerramenta");
+    if (ferramenta) ferramenta.style.display = "none";
   }
 
   function alternarModoRapido() {
     const fast = checked("modoRapido");
-    const show = (id, visible) => { const el = $(id); if (el) el.style.display = visible ? "" : "none"; };
-
-    // Campo essenciais no modo rápido: nome, área, macroeixo, exemplo orientador e dados principais.
-    ["secFerramenta","secSupervisao","secPontuacao"].forEach(id => show(id, !fast));
-
-    // Esconde campos opcionais da identificação
-    ["responsavel","equipe","sei","inicio","prazo"].forEach(id => {
-      const el = $(id);
-      if (el && el.closest(".field")) el.closest(".field").style.display = fast ? "none" : "";
-    });
-
-    // Esconde objetivo detalhado, decisão e resultados esperados; mantém exemplo orientador e tipo inferido.
-    ["problema","iafara","decisao"].forEach(id => {
-      const el = $(id);
-      if (el && el.closest(".field")) el.closest(".field").style.display = fast ? "none" : "";
-    });
-    qsa("#secObjetivo h3, #secObjetivo .checks").forEach(el => el.style.display = fast ? "none" : "");
-
-    // Na seção dados, mantém apenas aviso + dados principais no modo rápido.
-    qsa("#secDados .row, #secDados details, #secDados h3, #secDados .checks").forEach(el => el.style.display = fast ? "none" : "");
-    const tratamento = $("tratamentoDados");
-    if (tratamento && tratamento.closest(".field")) tratamento.closest(".field").style.display = fast ? "none" : "";
-
+    const btnCompleto = $("btnModoCompleto");
+    const btnRapido = $("btnModoRapido");
+    if (btnCompleto) btnCompleto.classList.toggle("active", !fast);
+    if (btnRapido) btnRapido.classList.toggle("active", fast);
     atualizarFastPathAssistivo();
     renderResultado();
+  }
+
+  function setModoRapido(fast) {
+    const input = $("modoRapido");
+    if (input) input.checked = !!fast;
+    alternarModoRapido();
   }
 
   function aplicarSugestoesMacroeixo() {
@@ -3688,7 +4201,7 @@ Esta triagem é instrumento de apoio. A pontuação não autoriza automaticament
     } else if (eixo === "Administração") {
       if (!checked("integracao")) $("integracao").checked = true;
       msg = "Sugestão para Administração: integração com sistema institucional foi pré-selecionada como hipótese comum. Confirme se faz sentido.";
-    } else if (eixo === "TIC, Dados e Segurança" || eixo === "Transversal") {
+    } else if (eixo === "TIC, dados e segurança" || eixo === "Transversal") {
       if (!checked("integracao")) $("integracao").checked = true;
       msg = "Sugestão para TIC/Dados/Segurança: integração com sistema institucional foi pré-selecionada. Confirme se faz sentido.";
     } else if (eixo === "Ensino") {
@@ -3715,7 +4228,7 @@ Esta triagem é instrumento de apoio. A pontuação não autoriza automaticament
     const r = inferir();
     setHint("sRisco", r.high.length ? "Sugestão: 0-1, há fator de trava/alto risco." : r.medium.length ? "Sugestão: 2, risco moderado mitigável." : "Sugestão: 3, baixo risco aparente.");
     setHint("sAderencia", getVal("macroeixo") && getVal("area") ? "Sugestão: 3, eixo e área definidos." : "Sugestão: 1-2, complete eixo e área.");
-    setHint("sReuso", getVal("macroeixo") === "Transversal" || getVal("macroeixo") === "TIC, Dados e Segurança" ? "Sugestão: 2, potencial transversal." : "Sugestão: 1-2, avalie reaproveitamento por outras áreas.");
+    setHint("sReuso", getVal("macroeixo") === "Transversal" || getVal("macroeixo") === "TIC, dados e segurança" ? "Sugestão: 2, potencial transversal." : "Sugestão: 1-2, avalie reaproveitamento por outras áreas.");
     setHint("sCusto", checked("contratacao") ? "Sugestão: 1, contratação/licença a avaliar." : "Sugestão: 2, sem contratação relevante informada.");
   }
 
@@ -3729,9 +4242,10 @@ Iniciativa: ${d.identificacao.nome || "Não informado"}
 AIE inicial: ${d.aie_avaliacao_de_riscos.nivel} (${d.aie_avaliacao_de_riscos.versao_da_ficha})
 Análise complementar da ficha: ${d.resultado_automatico.analise_complementar_da_ficha}
 Encaminhamento: ${d.resultado_automatico.encaminhamento}
-Dados utilizados: ${d.dados.dados_principais || "Não informado"}
-Ferramenta/ambiente: ${d.ferramenta_ambiente.ferramenta || d.avaliacao.mini_ferramenta || "A definir"}
-Validação humana: ${d.supervisao_controles_indicadores.validador || d.avaliacao.mini_validador || "Não informado"}
+Problema a resolver: ${d.objetivo_escopo.problema || "Não informado"}
+O que a IA fará: ${d.objetivo_escopo.o_que_a_ia_fara || "Não informado"}
+Indicador: ${d.supervisao_controles_indicadores.indicador || "Não informado"}
+Responsável pela iniciativa: ${d.ciencia_validacao.responsavel_iniciativa || "Não informado"}
 Controles mínimos: ${controlesMin.join("; ")}
 AIE/RIPD: classificação primária pelo AIE.${checked("dPessoal") || checked("dPessoalSensivel") ? " Avaliar necessidade de RIPD com o Encarregado." : ""}
 Observação: resultado de apoio, sujeito à Política de IA do JBRJ e à manifestação da instância competente quando aplicável.`;
@@ -3747,9 +4261,9 @@ Observação: resultado de apoio, sujeito à Política de IA do JBRJ e à manife
     gerarResumoSEI();
     try {
       await navigator.clipboard.writeText($("resumoSEI").textContent);
-      alert("Resumo executivo copiado para a área de transferência.");
+      mostrarToast("Resumo executivo copiado para a área de transferência.");
     } catch (e) {
-      alert("Não foi possível copiar automaticamente. Selecione o texto e copie manualmente.");
+      mostrarToast("Não foi possível copiar automaticamente. Selecione o texto e copie manualmente.", "error");
     }
   }
 
@@ -3786,9 +4300,10 @@ Observação: resultado de apoio, sujeito à Política de IA do JBRJ e à manife
     const url = location.origin + location.pathname + "#state=" + state;
     try {
       await navigator.clipboard.writeText(url);
-      alert("Link de revisão copiado. O gestor abrirá o formulário preenchido em modo somente leitura, sem envio para servidor.");
+      mostrarToast("Link de revisão copiado. O formulário abrirá em modo somente leitura.");
     } catch (e) {
-      prompt("Copie o link de revisão:", url);
+      $("relatorio").textContent = url;
+      mostrarToast("Não foi possível copiar automaticamente. O link foi colocado no campo de relatório para seleção manual.", "error");
     }
   }
 
@@ -3852,25 +4367,26 @@ Observação: resultado de apoio, sujeito à Política de IA do JBRJ e à manife
     const box = $("historicoProjetos");
     if (!box) return;
     if (!hist.length) {
-      box.innerHTML = "Nenhum projeto registrado nesta sessão.";
+      box.innerHTML = "Nenhuma iniciativa/uso registrado nesta sessão.";
       return;
     }
-    box.innerHTML = `<table><thead><tr><th>Projeto</th><th>Área</th><th>Risco</th><th>Pontos</th></tr></thead><tbody>${hist.map(h => `<tr><td>${escapeHtml(h.nome)}<br><span class="small">${escapeHtml(h.data)}</span></td><td>${escapeHtml(h.area)}</td><td>${escapeHtml(h.risco)}</td><td>${h.score}/16</td></tr>`).join("")}</tbody></table>`;
+    box.innerHTML = `<table><thead><tr><th>Iniciativa/Uso</th><th>Área</th><th>Risco</th><th>Pontos</th></tr></thead><tbody>${hist.map(h => `<tr><td>${escapeHtml(h.nome)}<br><span class="small">${escapeHtml(h.data)}</span></td><td>${escapeHtml(h.area)}</td><td>${escapeHtml(h.risco)}</td><td>${h.score}/16</td></tr>`).join("")}</tbody></table>`;
   }
 
   function gerarRelatorio() {
     renderResultado();
     $("relatorio").textContent = gerarTextoRelatorio();
     salvarHistoricoSessao();
+    atualizarStepper();
   }
 
   async function copiarRelatorio() {
     gerarRelatorio();
     try {
       await navigator.clipboard.writeText($("relatorio").textContent);
-      alert("Relatório copiado para a área de transferência.");
+      mostrarToast("Relatório copiado para a área de transferência.");
     } catch (e) {
-      alert("Não foi possível copiar automaticamente. Selecione o texto do relatório e copie manualmente.");
+      mostrarToast("Não foi possível copiar automaticamente. Selecione o texto do relatório e copie manualmente.", "error");
     }
   }
 
@@ -3886,19 +4402,62 @@ Observação: resultado de apoio, sujeito à Política de IA do JBRJ e à manife
     URL.revokeObjectURL(url);
   }
 
+  function nomeArquivoBaseRelatorio() {
+    const nome = getVal("nome") || getVal("aieNomeProjeto") || "iniciativa_ia";
+    const slug = nome
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/^_+|_+$/g, "")
+      .slice(0, 55) || "iniciativa_ia";
+    const data = new Date().toISOString().slice(0, 10);
+    return `relatorio_sei_${slug}_${data}`;
+  }
+
+  function validarExtracaoRelatorioSEI() {
+    const aieRisk = calcularAIE();
+    if (!aieRisk.complete) {
+      mostrarToast("Conclua a avaliação de risco inicial antes de extrair o relatório para o SEI.", "error");
+      $("secAIE")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return false;
+    }
+    if (aieRisk.level !== "Risco Excessivo" && !aiePrincipalCompleto()) {
+      mostrarToast("Conclua o questionário principal do AIE antes de extrair o relatório para o SEI.", "error");
+      $("secAIEPrincipal")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return false;
+    }
+    const faltantes = camposMinimosFaltantes();
+    if (faltantes.length && aieRisk.level !== "Risco Excessivo") {
+      mostrarToast(`Atenção: o relatório será gerado com ${faltantes.length} campo(s) mínimo(s) não informado(s).`, "error");
+    }
+    return true;
+  }
+
+  async function extrairRelatorioSEI(formato) {
+    if (!validarExtracaoRelatorioSEI()) return;
+    gerarRelatorio();
+    gerarResumoSEI();
+    if (formato === "pdf") baixarPDFRelatorio();
+    else if (formato === "copiar") await copiarRelatorio();
+    else if (formato === "resumo") await copiarResumoSEI();
+    else if (formato === "txt") baixarTXT();
+    else if (formato === "json") baixarJSON();
+  }
+
   function baixarTXT() {
     gerarRelatorio();
-    baixarArquivo("triagem_ia_jbrj_relatorio.txt", $("relatorio").textContent, "text/plain;charset=utf-8");
+    baixarArquivo(nomeArquivoBaseRelatorio() + ".txt", $("relatorio").textContent, "text/plain;charset=utf-8");
   }
 
   function baixarJSON() {
     const data = JSON.stringify(coletarDados(), null, 2);
-    baixarArquivo("triagem_ia_jbrj_dados.json", data, "application/json;charset=utf-8");
+    baixarArquivo(nomeArquivoBaseRelatorio() + "_dados.json", data, "application/json;charset=utf-8");
   }
 
   function resetarFormularioCompleto() {
     qsa("input, textarea, select").forEach(el => {
-      if (el.type === "checkbox") el.checked = false;
+      if (el.type === "checkbox" || el.type === "radio") el.checked = false;
       else if (el.tagName === "SELECT") el.selectedIndex = 0;
       else el.value = "";
     });
@@ -3907,9 +4466,10 @@ Observação: resultado de apoio, sujeito à Política de IA do JBRJ e à manife
     $("decisao").value = "nao";
     $("frequencia").value = "pontual";
     if ($("aieOrgao")) $("aieOrgao").value = "JBRJ";
-    if ($("aieOrgao")) $("aieOrgao").value = "JBRJ";
     if ($("miniRevisao")) $("miniRevisao").checked = true;
     if ($("miniSemDadoSensivel")) $("miniSemDadoSensivel").checked = true;
+    const produtoNao = document.querySelector('input[name="produtoInstitucionalIA"][value="nao"]');
+    if (produtoNao) produtoNao.checked = true;
     $("relatorio").textContent = "Nenhum relatório gerado ainda.";
     $("resumoSEI").textContent = "Nenhum resumo gerado ainda.";
     sessionStorage.removeItem("triagemIAJBRJ_draft_v5_4");
@@ -3919,8 +4479,16 @@ Observação: resultado de apoio, sujeito à Política de IA do JBRJ e à manife
   }
 
   function limparTudo() {
-    if (!confirm("Limpar toda a avaliação e voltar para o AIE?")) return;
-    resetarFormularioCompleto();
+    abrirConfirmacao({
+      title: "Limpar avaliação?",
+      message: "Isso apagará as respostas desta avaliação e voltará para o AIE.",
+      okText: "Limpar tudo",
+      danger: true,
+      onConfirm: () => {
+        resetarFormularioCompleto();
+        mostrarToast("Avaliação limpa. Você voltou para o AIE.");
+      }
+    });
   }
 
   function escapeHtml(s) {
@@ -3933,12 +4501,14 @@ Observação: resultado de apoio, sujeito à Política de IA do JBRJ e à manife
 
   function resetarCamposParaExemplo() {
     qsa(FORM_SELECTOR).forEach(el => {
-      if (el.type === "checkbox") el.checked = false;
+      if (el.type === "checkbox" || el.type === "radio") el.checked = false;
       else if (el.tagName === "SELECT") el.selectedIndex = 0;
       else el.value = "";
     });
     $("decisao").value = "nao";
     $("frequencia").value = "pontual";
+    const produtoNao = document.querySelector('input[name="produtoInstitucionalIA"][value="nao"]');
+    if (produtoNao) produtoNao.checked = true;
   }
 
   function marcarAIE(id, values) {
@@ -3962,6 +4532,94 @@ Observação: resultado de apoio, sujeito à Política de IA do JBRJ e à manife
     marcarAIE("aieDiscriminacao", discriminacao);
     marcarAIE("aieTecnologiaEmergente", tecnologia);
     atualizarVisibilidadeAIE();
+  }
+
+  function preencherExemploAIE(nivel) {
+    const exemplos = {
+      baixo: {
+        nome: "Revisão assistida de texto institucional com dados públicos",
+        finalidade: "Apoiar a revisão gramatical e a organização de uma minuta baseada exclusivamente em informações públicas, mantendo validação humana integral antes do uso.",
+        tipo: ["ia_generativa"],
+        decisoes: "processa_info",
+        dadosPessoais: "nao_dp",
+        impacto: "nenhum",
+        excessivo: ["nenhum"],
+        discriminacao: "nao",
+        tecnologia: "nao_madura"
+      },
+      medio: {
+        nome: "Triagem em lote de literatura científica",
+        finalidade: "Extrair e organizar informações de artigos públicos para apoiar análise técnica humana, com processamento em lote, rastreabilidade das fontes e validação antes do uso.",
+        tipo: ["ia_generativa", "pln"],
+        decisoes: "suporte_revisao_facil",
+        dadosPessoais: "nao_dp",
+        impacto: "moderado",
+        excessivo: ["nenhum"],
+        discriminacao: "baixo_controlavel",
+        tecnologia: "parcial"
+      },
+      alto: {
+        nome: "Priorização automatizada de solicitações com dados sensíveis",
+        finalidade: "Classificar solicitações de pessoas com uso de dados pessoais sensíveis e executar encaminhamentos automáticos, com possibilidade de revisão somente após o impacto.",
+        tipo: ["ia_generativa", "classico"],
+        decisoes: "autonoma_revisao_pos",
+        dadosPessoais: "sim_dp",
+        dadosSensiveis: "sim_sensiveis",
+        volumeTitulares: "medio",
+        impacto: "moderado",
+        excessivo: ["nenhum"],
+        discriminacao: "nao_analisado",
+        tecnologia: "parcial"
+      },
+      excessivo: {
+        nome: "Pontuação social para acesso a benefício institucional",
+        finalidade: "Classificar pessoas por pontuação social para definir prioridade ou acesso a benefício ou serviço institucional.",
+        tipo: ["classico"],
+        decisoes: "totalmente_autonoma",
+        dadosPessoais: "sim_dp",
+        dadosSensiveis: "nao_sensiveis",
+        volumeTitulares: "grande",
+        impacto: "alto",
+        excessivo: ["pontuacao_social"],
+        discriminacao: "significativo",
+        tecnologia: "parcial"
+      }
+    };
+
+    const exemplo = exemplos[nivel];
+    if (!exemplo) return;
+
+    resetarCamposParaExemplo();
+    aiePrefillApplied = false;
+    editandoAIE = true;
+    setValorSeExistir("aieNomeProjeto", exemplo.nome);
+    setValorSeExistir("aieOrgao", "JBRJ");
+    setValorSeExistir("aieFinalidade", exemplo.finalidade);
+
+    marcarAIE("aieTipoIA", exemplo.tipo);
+    marcarAIE("aieDecisoes", exemplo.decisoes);
+    marcarAIE("aieDadosPessoais", exemplo.dadosPessoais);
+    atualizarVisibilidadeAIE();
+    if (exemplo.dadosPessoais === "sim_dp") {
+      marcarAIE("aieDadosSensiveis", exemplo.dadosSensiveis || "nao_sensiveis");
+      marcarAIE("aieVolumeTitulares", exemplo.volumeTitulares || "pequeno");
+    }
+    marcarAIE("aieImpactoDireitos", exemplo.impacto);
+    marcarAIE("aieRiscoExcessivo", exemplo.excessivo);
+    marcarAIE("aieDiscriminacao", exemplo.discriminacao);
+    marcarAIE("aieTecnologiaEmergente", exemplo.tecnologia);
+    atualizarVisibilidadeAIE();
+    renderResultado();
+    salvarRascunhoSessao();
+
+    const resultado = calcularAIE();
+    mostrarToast(`Exemplo de ${resultado.level.toLowerCase()} preenchido. Revise as respostas e os fatores que formaram a classificação.`);
+    $("secAIE")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function setValorSeExistir(id, value) {
+    const el = $(id);
+    if (el) el.value = value;
   }
 
   function preencherExemploCNCFlora() {
@@ -4001,12 +4659,12 @@ Observação: resultado de apoio, sujeito à Política de IA do JBRJ e à manife
     $("indicador").value = "Tempo economizado";
     $("medicao").value = "Comparar tempo médio de leitura/extração antes e depois; medir número de artigos processados, taxa de correção humana e qualidade dos campos extraídos.";
 
-    $("sAderencia").value = "3";
-    $("sImpacto").value = "3";
-    $("sViabilidade").value = "2";
-    $("sRisco").value = "2";
-    $("sReuso").value = "2";
-    $("sCusto").value = "1";
+    setValorSeExistir("sAderencia", "3");
+    setValorSeExistir("sImpacto", "3");
+    setValorSeExistir("sViabilidade", "2");
+    setValorSeExistir("sRisco", "2");
+    setValorSeExistir("sReuso", "2");
+    setValorSeExistir("sCusto", "1");
 
     renderResultado();
     gerarRelatorio();
@@ -4035,16 +4693,16 @@ Observação: resultado de apoio, sujeito à Política de IA do JBRJ e à manife
     $("ferramenta").value = "Ferramenta de IA generativa a definir";
     $("validador").value = "Servidor responsável pelo documento";
     $("indicador").value = "Tempo economizado";
-    $("sAderencia").value = "3"; $("sImpacto").value = "2"; $("sViabilidade").value = "3"; $("sRisco").value = "3"; $("sReuso").value = "1"; $("sCusto").value = "2";
+    setValorSeExistir("sAderencia", "3"); setValorSeExistir("sImpacto", "2"); setValorSeExistir("sViabilidade", "3"); setValorSeExistir("sRisco", "3"); setValorSeExistir("sReuso", "1"); setValorSeExistir("sCusto", "2");
     renderResultado(); gerarResumoSEI();
   }
 
   function preencherExemploDIPEQ() {
     resetarCamposParaExemplo();
-    preencherAIEBasico({ tipo: ["audio_video","ia_generativa"], impacto: "baixo", tecnologia: "parcial" });
+    preencherAIEBasico({ tipo: ["audio_video","ia_generativa"], impacto: "moderado", tecnologia: "parcial" });
     $("nome").value = "Análise assistida de imagens de herbário";
     $("area").value = "DIPEQ / Herbário";
-    $("macroeixo").value = "Pesquisa";
+    $("macroeixo").value = "Atividade finalística técnico-científica";
     $("responsavel").value = "Pesquisador ou curador responsável pelo piloto";
     $("problema").value = "A análise manual de imagens de exsicatas e materiais de herbário pode demandar tempo e padronização na triagem inicial.";
     $("iafara").value = "A IA apoiará a triagem de imagens, extração de metadados visuais e organização de possíveis características de interesse, sem substituir validação taxonômica.";
@@ -4057,8 +4715,8 @@ Observação: resultado de apoio, sujeito à Política de IA do JBRJ e à manife
     $("ferramenta").value = "Modelo de visão computacional ou IA multimodal a definir";
     $("tipoSolucao").value = "A definir"; $("ambiente").value = "A definir"; $("frequencia").value = "piloto";
     $("validador").value = "Pesquisador/curador responsável";
-    $("indicador").value = "Qualidade / precisão";
-    $("sAderencia").value = "3"; $("sImpacto").value = "2"; $("sViabilidade").value = "2"; $("sRisco").value = "2"; $("sReuso").value = "2"; $("sCusto").value = "1";
+    $("indicador").value = "Qualidade";
+    setValorSeExistir("sAderencia", "3"); setValorSeExistir("sImpacto", "2"); setValorSeExistir("sViabilidade", "2"); setValorSeExistir("sRisco", "2"); setValorSeExistir("sReuso", "2"); setValorSeExistir("sCusto", "1");
     renderResultado(); gerarRelatorio();
   }
 
@@ -4067,7 +4725,7 @@ Observação: resultado de apoio, sujeito à Política de IA do JBRJ e à manife
     preencherAIEBasico({ tipo: ["ia_generativa"], decisoes: "suporte_revisao_facil" });
     $("nome").value = "Assistente de codificação para apoio à CTIC";
     $("area").value = "CTIC";
-    $("macroeixo").value = "TIC, Dados e Segurança";
+    $("macroeixo").value = "TIC, dados e segurança";
     $("responsavel").value = "Servidor ou técnico responsável pela atividade";
     $("problema").value = "Atividades de desenvolvimento e manutenção podem se beneficiar de apoio à escrita, revisão e documentação de código.";
     $("iafara").value = "A IA apoiará geração de trechos, revisão, explicação de código e documentação, sem receber segredos, credenciais, dados pessoais, código sensível ou arquitetura crítica.";
@@ -4080,15 +4738,19 @@ Observação: resultado de apoio, sujeito à Política de IA do JBRJ e à manife
     $("tipoSolucao").value = "IA generativa externa"; $("ambiente").value = "Provedor externo"; $("frequencia").value = "piloto";
     $("validador").value = "Servidor/técnico responsável pela validação do código";
     $("indicador").value = "Redução de retrabalho";
-    $("sAderencia").value = "3"; $("sImpacto").value = "2"; $("sViabilidade").value = "3"; $("sRisco").value = "2"; $("sReuso").value = "2"; $("sCusto").value = "2";
+    setValorSeExistir("sAderencia", "3"); setValorSeExistir("sImpacto", "2"); setValorSeExistir("sViabilidade", "3"); setValorSeExistir("sRisco", "2"); setValorSeExistir("sReuso", "2"); setValorSeExistir("sCusto", "2");
     renderResultado(); gerarRelatorio();
   }
 
   renderAIEPerguntas();
+  qsa("[data-aie-exemplo]").forEach(button => {
+    button.addEventListener("click", () => preencherExemploAIE(button.dataset.aieExemplo));
+  });
   qsa(FORM_SELECTOR).forEach(el => {
     el.addEventListener("input", () => { renderResultado(); salvarRascunhoSessao(); });
     el.addEventListener("change", () => {
       if (el.classList.contains("aieInput")) {
+        aplicarExclusaoMutuaNenhum(el);
         atualizarVisibilidadeAIE();
         if (aieRespondido()) editandoAIE = false;
       }
@@ -4106,7 +4768,7 @@ Observação: resultado de apoio, sujeito à Política de IA do JBRJ e à manife
       setReadOnlyMode();
       return true;
     } catch (e) {
-      alert("Não foi possível carregar o estado compartilhado pela URL.");
+      mostrarToast("Não foi possível carregar o estado compartilhado pela URL.", "error");
       return false;
     }
   }
@@ -4128,7 +4790,7 @@ Observação: resultado de apoio, sujeito à Política de IA do JBRJ e à manife
   function abrirExplicacaoAlgoritmo() {
     const w = window.open("", "_blank");
     if (!w) {
-      alert("O navegador bloqueou a nova aba. Permita pop-ups para abrir a explicação do algoritmo.");
+      mostrarToast("O navegador bloqueou a nova aba. Permita pop-ups para abrir a explicação do algoritmo.", "error");
       return;
     }
 
@@ -4170,9 +4832,13 @@ Observação: resultado de apoio, sujeito à Política de IA do JBRJ e à manife
     .node { background: white; border: 1px solid var(--border); border-radius: 14px; padding: 14px; min-height: 110px; }
     .arrow { font-size: 26px; color: var(--blue); font-weight: 700; }
     .callout { border-left: 6px solid var(--blue); background: white; border-radius: 12px; padding: 14px 16px; margin: 16px 0; }
+    .example-actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 14px 0; }
+    .example-button { width: 100%; border: 1px solid var(--blue); border-radius: 12px; padding: 12px; background: white; color: var(--blue2); font-weight: 700; cursor: pointer; }
+    .example-button:hover, .example-button:focus-visible { background: var(--light-blue); outline: 3px solid rgba(23, 74, 120, .16); }
+    .example-status { display: none; margin-top: 10px; padding: 10px 12px; border-radius: 10px; background: var(--ok); border: 1px solid #73b883; }
     ul { margin-top: 6px; }
     @media (max-width: 850px) {
-      .grid, .flow { grid-template-columns: 1fr; }
+      .grid, .flow, .example-actions { grid-template-columns: 1fr; }
       .arrow { transform: rotate(90deg); text-align: center; }
     }
 
@@ -4253,13 +4919,13 @@ Observação: resultado de apoio, sujeito à Política de IA do JBRJ e à manife
 <header>
   <div class="wrap">
     <h1>Como funciona o algoritmo da Triagem IA JBRJ</h1>
-    <p>Explicação operacional do enquadramento de risco, dos fatores de trava e do cálculo da pontuação orientativa — MVP v5.4.</p>
+    <p>Explicação operacional do enquadramento de risco, dos fatores de trava e do cálculo da pontuação orientativa — MVP v6.6.</p>
   </div>
 </header>
 
 <main class="wrap">
   <div class="callout">
-    <strong>Ideia central:</strong> o algoritmo não “aprova” uma iniciativa. Ele organiza uma triagem proporcional ao risco, indicando se o caso é uso assistivo, piloto de baixo risco, projeto de médio risco ou alto risco/institucionalização.
+    <strong>Ideia central:</strong> o algoritmo não “aprova” uma iniciativa/uso. Ele organiza uma triagem proporcional ao risco, indicando se o caso é uso assistivo, piloto de baixo risco, iniciativa/uso de médio risco ou alto risco/institucionalização.
   </div>
 
   <section class="grid">
@@ -4310,12 +4976,12 @@ Observação: resultado de apoio, sujeito à Política de IA do JBRJ e à manife
           <td>Uso permitido, sem aprovação prévia como regra. Pode gerar resumo simples.</td>
         </tr>
         <tr>
-          <td><strong>Projeto-piloto de baixo risco</strong></td>
+          <td><strong>Iniciativa/Uso piloto de baixo risco</strong></td>
           <td>Teste controlado com dados públicos/anonimizados, escopo limitado e revisão humana.</td>
           <td>Registro simplificado pela área responsável.</td>
         </tr>
         <tr>
-          <td><strong>Projeto de médio risco</strong></td>
+          <td><strong>Iniciativa/Uso de médio risco</strong></td>
           <td>Processamento em lote, armazenamento persistente, custo, uso continuado, apoio à decisão humana ou integração limitada.</td>
           <td>Registro técnico, controles mínimos e orientação da área competente quando aplicável.</td>
         </tr>
@@ -4331,9 +4997,9 @@ Observação: resultado de apoio, sujeito à Política de IA do JBRJ e à manife
   <section>
     <h2>2. Diferença entre fator de risco e alerta textual</h2>
     <div class="callout">
-      Na versão v5.4, menções textuais a termos sensíveis geram apenas <strong>alertas de confirmação</strong>. Elas não elevam sozinhas o projeto para alto risco.
+      Na versão atual, menções textuais a termos sensíveis geram apenas <strong>alertas de confirmação</strong>. Elas não elevam sozinhas a iniciativa/uso para alto risco.
     </div>
-    <p><strong>Exemplo:</strong> se o texto menciona “artigos científicos” ou “organizar informações”, isso pode gerar alerta sobre direito autoral ou revisão de dados, mas não transforma automaticamente o projeto em alto risco.</p>
+    <p><strong>Exemplo:</strong> se o texto menciona “artigos científicos” ou “organizar informações”, isso pode gerar alerta sobre direito autoral ou revisão de dados, mas não transforma automaticamente a iniciativa/uso em alto risco.</p>
     <p><strong>O risco sobe de fato</strong> quando o usuário marca explicitamente dado pessoal, dado sensível, dado sigiloso, decisão automatizada ou outro fator objetivo.</p>
   </section>
 
@@ -4366,12 +5032,55 @@ Observação: resultado de apoio, sujeito à Política de IA do JBRJ e à manife
   </section>
 
   <section>
-    <h2>4. Regra mais importante</h2>
+    <h2>4. Exemplos práticos de preenchimento do AIE</h2>
+    <p>Os botões abaixo preenchem automaticamente, na tela principal, um caso completo da avaliação inicial. Depois do clique, volte à aba da ferramenta para revisar as respostas e a classificação.</p>
+    <div class="example-actions">
+      <button type="button" class="example-button" data-level="baixo">Preencher risco baixo</button>
+      <button type="button" class="example-button" data-level="medio">Preencher risco médio</button>
+      <button type="button" class="example-button" data-level="alto">Preencher risco alto</button>
+      <button type="button" class="example-button" data-level="excessivo">Preencher risco excessivo</button>
+    </div>
+    <div id="exampleStatus" class="example-status" role="status"></div>
+    <table>
+      <thead><tr><th>Nível</th><th>Caso demonstrativo</th><th>Principais respostas que formam o nível</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Risco baixo</strong></td><td>Revisão assistida de texto institucional.</td><td>Dados públicos, análise humana, nenhum impacto direto e tecnologia madura.</td></tr>
+        <tr><td><strong>Risco médio</strong></td><td>Triagem em lote de literatura científica.</td><td>IA generativa + PLN, impacto moderado e risco discriminatório controlável.</td></tr>
+        <tr><td><strong>Risco alto</strong></td><td>Priorização automatizada de solicitações.</td><td>Dados pessoais sensíveis e ação autônoma com revisão apenas posterior.</td></tr>
+        <tr><td><strong>Risco excessivo</strong></td><td>Pontuação social para acesso a benefício.</td><td>Finalidade expressamente enquadrada como risco excessivo; o fluxo é interrompido.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>5. Regra mais importante</h2>
     <div class="callout">
-      <strong>A pontuação alta não neutraliza alto risco.</strong> Um projeto pode ter 14/16 e ainda exigir manifestação prévia se envolver dado sensível, decisão automatizada, integração crítica ou institucionalização.
+      <strong>A pontuação alta não neutraliza alto risco.</strong> Uma iniciativa/uso pode ter 14/16 e ainda exigir manifestação prévia se envolver dado sensível, decisão automatizada, integração crítica ou institucionalização.
     </div>
   </section>
 </main>
+<script>
+  function aplicarExemplo(nivel) {
+    const status = document.getElementById("exampleStatus");
+    try {
+      if (!window.opener || typeof window.opener.preencherExemploAIE !== "function") {
+        throw new Error("A tela principal não está disponível.");
+      }
+      window.opener.preencherExemploAIE(nivel);
+      window.opener.focus();
+      status.textContent = "Exemplo aplicado na tela principal. Volte à aba da ferramenta para revisar o preenchimento.";
+      status.style.display = "block";
+    } catch (error) {
+      status.textContent = "Não foi possível aplicar o exemplo. Feche esta aba, reabra a explicação pela tela principal e tente novamente.";
+      status.style.display = "block";
+      status.style.background = "var(--danger)";
+      status.style.borderColor = "#e56b6f";
+    }
+  }
+  document.querySelectorAll("[data-level]").forEach(function(button) {
+    button.addEventListener("click", function() { aplicarExemplo(button.dataset.level); });
+  });
+<\/script>
 </body>
 </html>`;
 
@@ -4399,7 +5108,7 @@ Observação: resultado de apoio, sujeito à Política de IA do JBRJ e à manife
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
-  <title>Relatório de Triagem IA JBRJ - ${escapeHtml(d.identificacao.nome || "iniciativa")}</title>
+  <title>${escapeHtml(nomeArquivoBaseRelatorio())}</title>
   <style>
     :root {
       --blue: #174a78;
@@ -4529,9 +5238,9 @@ Observação: resultado de apoio, sujeito à Política de IA do JBRJ e à manife
 <body>
   <div class="page">
     <header>
-      <h1>Relatório de Triagem de Iniciativa de IA</h1>
-      <p><strong>JBRJ — GT-IA — MVP v5.4</strong></p>
-      <p>Gerado em ${escapeHtml(dataGeracao)}. Documento de apoio à avaliação proporcional de risco.</p>
+      <h1>Relatório consolidado de Iniciativa/Uso de IA</h1>
+      <p><strong>JBRJ — GT-IA — MVP v6.6</strong></p>
+      <p>Gerado em ${escapeHtml(dataGeracao)} para instrução do processo SEI e registro da avaliação proporcional de risco.</p>
     </header>
 
     <main>
@@ -4557,24 +5266,32 @@ Observação: resultado de apoio, sujeito à Política de IA do JBRJ e à manife
       </section>
 
       <section>
-        <h2>1. Identificação e escopo</h2>
+        <h2>Registro detalhado do questionário principal do AIE</h2>
+        ${gerarHtmlRespostasAIEPrincipal()}
+      </section>
+
+      <section>
+        <h2>1. Identificação da iniciativa</h2>
         <div class="two">
           <div class="box">
-            <div class="label">Responsável / equipe</div>
-            <p><strong>Responsável:</strong> ${escapeHtml(valorOuNaoInformado(d.identificacao.responsavel))}</p>
-            <p><strong>Equipe:</strong> ${escapeHtml(valorOuNaoInformado(d.identificacao.equipe))}</p>
-            <p><strong>Processo SEI:</strong> ${escapeHtml(valorOuNaoInformado(d.identificacao.processo_sei))}</p>
-            <p><strong>Prazo:</strong> ${escapeHtml(valorOuNaoInformado(d.identificacao.prazo))}</p>
+            <div class="label">Identificação administrativa</div>
+            <p><strong>Nome:</strong> ${escapeHtml(valorOuNaoInformado(d.identificacao.nome))}</p>
+            <p><strong>Área responsável:</strong> ${escapeHtml(valorOuNaoInformado(d.identificacao.area))}</p>
+            <p><strong>Macroeixo:</strong> ${escapeHtml(valorOuNaoInformado(d.identificacao.macroeixo))}</p>
+            <p><strong>Responsável técnico ou gestor:</strong> ${escapeHtml(valorOuNaoInformado(d.identificacao.responsavel))}</p>
           </div>
           <div class="box">
-            <div class="label">Enquadramento operacional</div>
-            <p><strong>Exemplo orientador:</strong> ${escapeHtml(valorOuNaoInformado(d.objetivo_escopo.exemplo_orientador))}</p>
-            <p><strong>Decisão:</strong> ${escapeHtml(valorOuNaoInformado(d.objetivo_escopo.decisao))}</p>
-            <p><strong>Resultados esperados:</strong></p>
-            <ul>${listaHtmlPdf(resultados)}</ul>
+            <div class="label">Equipe e prazo</div>
+            <p><strong>Equipe:</strong> ${escapeHtml(valorOuNaoInformado(d.identificacao.equipe))}</p>
+            <p><strong>Processo SEI:</strong> ${escapeHtml(valorOuNaoInformado(d.identificacao.processo_sei))}</p>
+            <p><strong>Data prevista de início:</strong> ${escapeHtml(valorOuNaoInformado(d.identificacao.data_inicio))}</p>
+            <p><strong>Prazo:</strong> ${escapeHtml(valorOuNaoInformado(d.identificacao.prazo))}</p>
           </div>
         </div>
+      </section>
 
+      <section>
+        <h2>2. Objetivo e escopo</h2>
         <div class="box">
           <div class="label">Problema a resolver</div>
           <p>${textoHtmlPdf(d.objetivo_escopo.problema)}</p>
@@ -4583,63 +5300,33 @@ Observação: resultado de apoio, sujeito à Política de IA do JBRJ e à manife
           <div class="label">O que a IA fará</div>
           <p>${textoHtmlPdf(d.objetivo_escopo.o_que_a_ia_fara)}</p>
         </div>
-      </section>
-
-      <section>
-        <h2>2. Dados e tratamento previsto</h2>
         <div class="box">
-          <div class="label">Dados utilizados</div>
-          <p>${textoHtmlPdf(d.dados.dados_principais)}</p>
-        </div>
-        <div class="two">
-          <div class="box">
-            <div class="label">Dados essenciais</div>
-            <p>${textoHtmlPdf(d.dados.dados_essenciais)}</p>
-          </div>
-          <div class="box">
-            <div class="label">Fontes</div>
-            <p>${textoHtmlPdf(d.dados.fontes)}</p>
-          </div>
-        </div>
-        <div class="box">
-          <div class="label">Tratamento previsto</div>
-          <p>${textoHtmlPdf(d.dados.tratamento_previsto)}</p>
-        </div>
-        <div class="box">
-          <div class="label">Classificações marcadas</div>
-          <ul>${listaHtmlPdf(classificacoes)}</ul>
+          <div class="label">Resultados esperados</div>
+          <ul>${listaHtmlPdf(resultados)}</ul>
         </div>
       </section>
 
       <section>
-        <h2>3. Ferramenta, ambiente e integração</h2>
+        <h2>3. Indicadores e registro de uso</h2>
         <table>
           <tbody>
-            <tr><th>Ferramenta/modelo/provedor</th><td>${escapeHtml(valorOuNaoInformado(d.ferramenta_ambiente.ferramenta || d.avaliacao.mini_ferramenta))}</td></tr>
-            <tr><th>Tipo de solução</th><td>${escapeHtml(valorOuNaoInformado(d.ferramenta_ambiente.tipo_solucao))}</td></tr>
-            <tr><th>Ambiente</th><td>${escapeHtml(valorOuNaoInformado(d.ferramenta_ambiente.ambiente))}</td></tr>
-            <tr><th>Uso previsto</th><td>${escapeHtml(valorOuNaoInformado(d.ferramenta_ambiente.frequencia))}</td></tr>
-            <tr><th>Contratação/instrumento formal</th><td>${d.ferramenta_ambiente.contratacao ? "Sim" : "Não"}</td></tr>
-            <tr><th>Integração com sistema institucional</th><td>${d.ferramenta_ambiente.integracao ? "Sim" : "Não"}</td></tr>
-            <tr><th>Integração crítica</th><td>${d.ferramenta_ambiente.integracao_critica ? "Sim" : "Não"}</td></tr>
+            <tr><th>Indicador de resultado</th><td>${escapeHtml(valorOuNaoInformado(d.supervisao_controles_indicadores.indicador))}</td></tr>
+            <tr><th>Como será medido</th><td>${textoHtmlPdf(d.supervisao_controles_indicadores.medicao)}</td></tr>
+            <tr><th>Produto institucional com uso substancial de IA</th><td>${d.registro_uso.produto_institucional_uso_substancial_ia ? "Sim" : "Não"}</td></tr>
+            <tr><th>Forma de declaração</th><td>${textoHtmlPdf(d.registro_uso.forma_declaracao)}</td></tr>
           </tbody>
         </table>
       </section>
 
       <section>
-        <h2>4. Supervisão, controles e indicadores</h2>
-        <div class="two">
-          <div class="box">
-            <div class="label">Validação humana</div>
-            <p>${escapeHtml(valorOuNaoInformado(d.supervisao_controles_indicadores.validador || d.avaliacao.mini_validador))}</p>
-            <p><strong>Indicador mínimo:</strong> ${escapeHtml(valorOuNaoInformado(d.supervisao_controles_indicadores.indicador))}</p>
-            <p><strong>Como será medido:</strong> ${textoHtmlPdf(d.supervisao_controles_indicadores.medicao)}</p>
-          </div>
-          <div class="box">
-            <div class="label">Controles marcados</div>
-            <ul>${listaHtmlPdf(controlesMarcados)}</ul>
-          </div>
-        </div>
+        <h2>4. Ciência e validação</h2>
+        <table>
+          <tbody>
+            <tr><th>Responsável pela iniciativa</th><td>${escapeHtml(valorOuNaoInformado(d.ciencia_validacao.responsavel_iniciativa))}</td><td>${escapeHtml(valorOuNaoInformado(d.ciencia_validacao.data_responsavel))}</td></tr>
+            <tr><th>Gestor da área, quando aplicável</th><td>${escapeHtml(valorOuNaoInformado(d.ciencia_validacao.gestor_area))}</td><td>${escapeHtml(valorOuNaoInformado(d.ciencia_validacao.data_gestor_area))}</td></tr>
+            <tr><th>Orientação técnica ou manifestação prévia</th><td>${escapeHtml(valorOuNaoInformado(d.ciencia_validacao.orientacao_area_instancia))}</td><td>${escapeHtml(valorOuNaoInformado(d.ciencia_validacao.data_orientacao))}</td></tr>
+          </tbody>
+        </table>
       </section>
 
       <section>
@@ -4682,7 +5369,7 @@ Observação: resultado de apoio, sujeito à Política de IA do JBRJ e à manife
       </section>
 
       <div class="footer">
-        Relatório gerado pelo MVP Triagem IA JBRJ v5.4. Este documento é instrumento de apoio e não substitui avaliação institucional, jurídica, técnica, científica, de segurança ou de proteção de dados quando aplicável.
+        Relatório gerado pelo MVP Triagem IA JBRJ v6.5 para instrução processual. Revise o conteúdo antes da assinatura ou inclusão no SEI. Este documento é instrumento de apoio e não substitui avaliação institucional, jurídica, técnica, científica, de segurança ou de proteção de dados quando aplicável.
       </div>
     </main>
   </div>
@@ -4695,7 +5382,7 @@ Observação: resultado de apoio, sujeito à Política de IA do JBRJ e à manife
     gerarResumoSEI();
     const w = window.open("", "_blank");
     if (!w) {
-      alert("O navegador bloqueou a nova aba. Permita pop-ups para abrir o relatório visual em PDF.");
+      mostrarToast("O navegador bloqueou a nova aba. Permita pop-ups para abrir o relatório visual em PDF.", "error");
       return;
     }
     w.document.open();
@@ -4713,14 +5400,14 @@ Observação: resultado de apoio, sujeito à Política de IA do JBRJ e à manife
     const nivel = r.nivel || "";
     if (nivel.includes("Excessivo")) return "AIE interrompido: reavaliar legalidade, viabilidade ética e escopo antes de qualquer ficha principal.";
     if (nivel.includes("Risco Alto") || nivel.includes("Alto risco") || nivel.includes("institucionalização")) return "AIE completo ou instrumento equivalente, com manifestação prévia da instância competente.";
-    if (nivel.includes("Risco Médio") || nivel.includes("médio")) return "AIE padrão/proporcional, adequado para projeto de médio risco.";
+    if (nivel.includes("Risco Médio") || nivel.includes("médio")) return "AIE padrão/proporcional, adequado para iniciativa/uso de médio risco.";
     if (nivel.includes("Risco Baixo") || nivel.includes("baixo")) return "Ficha simplificada; AIE completo não obrigatório.";
     return "AIE não recomendado como exigência para uso assistivo com dados públicos.";
   }
 
   function riscoResidualAIE(r) {
     const nivel = r.nivel || "";
-    if (nivel.includes("Excessivo")) return "Excessivo até reavaliação fundamental do projeto.";
+    if (nivel.includes("Excessivo")) return "Excessivo até reavaliação fundamental da iniciativa/uso.";
     if (nivel.includes("Risco Alto") || nivel.includes("Alto risco")) return "Alto até manifestação prévia e definição de controles específicos.";
     if (nivel.includes("Risco Médio") || nivel.includes("médio")) return "Médio e controlável, desde que os controles mínimos sejam aplicados.";
     if (nivel.includes("Risco Baixo") || nivel.includes("baixo")) return "Baixo, com revisão humana e registro simplificado.";
@@ -4780,7 +5467,7 @@ Observação: resultado de apoio, sujeito à Política de IA do JBRJ e à manife
     const dataGeracao = new Date().toLocaleString("pt-BR");
 
     const payload = {
-      versao: "MVP v5.4",
+      versao: "MVP v6.6",
       dataGeracao,
       iniciativa: a.nome,
       area: a.area,
@@ -4954,7 +5641,7 @@ Observação: resultado de apoio, sujeito à Política de IA do JBRJ e à manife
   <div class="page">
     <header>
       <h1>Avaliação de Impacto Ético — AIE proporcional editável</h1>
-      <p><strong>JBRJ — GT-IA — MVP v5.4</strong></p>
+      <p><strong>JBRJ — GT-IA — MVP v6.6</strong></p>
       <p>Gerado em ${escapeHtml(dataGeracao)}. Documento de apoio para avaliação ética proporcional de iniciativa de IA.</p>
     </header>
 
@@ -4991,7 +5678,7 @@ Observação: resultado de apoio, sujeito à Política de IA do JBRJ e à manife
       <div id="printArea"></div>
 
       <div class="footer">
-        AIE proporcional gerado pelo MVP Triagem IA JBRJ v5.4. Este documento é instrumento de apoio e deve ser revisado pela área responsável e pelas instâncias competentes quando aplicável. Não substitui avaliação jurídica, técnica, científica, de segurança ou de proteção de dados.
+        AIE proporcional gerado pelo MVP Triagem IA JBRJ v6.5. Este documento é instrumento de apoio e deve ser revisado pela área responsável e pelas instâncias competentes quando aplicável. Não substitui avaliação jurídica, técnica, científica, de segurança ou de proteção de dados.
       </div>
     </main>
   </div>
@@ -5156,11 +5843,24 @@ Observação: resultado de apoio, sujeito à Política de IA do JBRJ e à manife
   function abrirAIEProporcional() {
     gerarRelatorio();
     const w = window.open("", "_blank");
-    if (!w) { alert("O navegador bloqueou a nova aba. Permita pop-ups para abrir a AIE proporcional."); return; }
+    if (!w) { mostrarToast("O navegador bloqueou a nova aba. Permita pop-ups para abrir a AIE proporcional.", "error"); return; }
     w.document.open();
     w.document.write(gerarHtmlAIEProporcional());
     w.document.close();
   }
+
+  if ($("confirmModalCancel")) $("confirmModalCancel").addEventListener("click", fecharConfirmacao);
+  if ($("confirmModalOk")) $("confirmModalOk").addEventListener("click", () => {
+    const callback = confirmModalCallback;
+    fecharConfirmacao();
+    if (callback) callback();
+  });
+  if ($("confirmModal")) $("confirmModal").addEventListener("click", (event) => {
+    if (event.target === $("confirmModal")) fecharConfirmacao();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && $("confirmModal")?.classList.contains("open")) fecharConfirmacao();
+  });
 
   $("printDate").textContent = new Date().toLocaleString("pt-BR");
   carregarEstadoURL();
